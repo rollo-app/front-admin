@@ -21,3 +21,28 @@ export function relativeMinutes(fromMs: number, nowMs = Date.now()): string {
   const d = Math.floor(h / 24);
   return `hace ${d} ${d === 1 ? "día" : "días"}`;
 }
+
+/** value/limit -> integer percent as string ("78"); 0 when limit <= 0. */
+export function formatPct(value: number, limit: number): string {
+  if (limit <= 0) return "0";
+  return String(Math.round((value / limit) * 100));
+}
+
+const gbFmt = new Intl.NumberFormat("es-AR", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+/** 2_100_000_000 -> "2,1 GB"; below 1 GB -> "5 MB" (decimal units). */
+export function formatBytes(n: number): string {
+  if (n >= 1e9) return `${gbFmt.format(n / 1e9)} GB`;
+  return `${formatInt(n / 1e6)} MB`;
+}
+
+/** "2026-10-27" -> "27/10 (UTC)" */
+export function formatUtcDay(day: string): string {
+  return `${formatDayMonth(day)} (UTC)`;
+}
+
+/** "2026-10-27" -> "27/10" */
+export function formatDayMonth(day: string): string {
+  const [, m, d] = day.split("-");
+  return `${d}/${m}`;
+}
