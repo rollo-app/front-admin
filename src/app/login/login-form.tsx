@@ -35,14 +35,18 @@ function CodeForm({ email, onBack }: { email: string; onBack: () => void }) {
 }
 
 export function LoginForm() {
-  const [state, action, pending] = useActionState<LoginState, FormData>(startLogin, { step: "email" });
   const [back, setBack] = useState(false);
+  const [state, action, pending] = useActionState<LoginState, FormData>(async (prev, form) => {
+    const next = await startLogin(prev, form);
+    setBack(false); // only when the new state arrives, so the old code form never flashes back
+    return next;
+  }, { step: "email" });
 
   if (state.step === "code" && state.email && !back) {
-    return <CodeForm email={state.email} onBack={() => setBack(true)} />;
+    return <CodeForm key={state.email} email={state.email} onBack={() => setBack(true)} />;
   }
   return (
-    <form action={action} onSubmit={() => setBack(false)} className="flex flex-col gap-4">
+    <form action={action} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
         <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required autoFocus />

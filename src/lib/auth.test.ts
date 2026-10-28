@@ -4,7 +4,7 @@ vi.mock("next/navigation", () => ({ redirect: vi.fn((to: string) => { throw new 
 vi.mock("@/lib/session", () => ({ getSessionToken: vi.fn(), clearSessionCookie: vi.fn() }));
 vi.mock("./session", () => ({ getSessionToken: vi.fn(), clearSessionCookie: vi.fn() }));
 vi.mock("./api", async (orig) => ({ ...(await orig<any>()), adminApi: { me: vi.fn() } }));
-import { NoAccessError, adminApi } from "./api";
+import { ApiError, NoAccessError, adminApi } from "./api";
 import { getSessionToken } from "./session";
 import { requireSession } from "./auth";
 
@@ -19,6 +19,11 @@ describe("requireSession", () => {
     (getSessionToken as any).mockResolvedValue("tok");
     (adminApi.me as any).mockRejectedValue(new NoAccessError("No encontrado"));
     await expect(requireSession()).rejects.toThrow("REDIRECT:/logout");
+  });
+  it("rethrows other backend errors without redirecting", async () => {
+    (getSessionToken as any).mockResolvedValue("tok");
+    (adminApi.me as any).mockRejectedValue(new ApiError(500, "Error interno"));
+    await expect(requireSession()).rejects.toThrow("Error interno");
   });
   it("returns token and me", async () => {
     const me = { id: "1", email: "su@rollo.test", name: "J", appRole: "superadmin" };
