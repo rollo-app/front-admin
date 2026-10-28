@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ErrorState } from "@/components/data/error-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ApiError, adminApi } from "@/lib/api";
+import { ApiError, NoAccessError, adminApi } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
 import { formatDate, formatInt, relativeMinutes } from "@/lib/format";
 import type { AdminUserDetail, TripState } from "@/lib/types";
@@ -17,16 +17,22 @@ const STATE_LABEL: Record<TripState, string> = {
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { token } = await requireSession();
-  let user: AdminUserDetail;
+  let user: AdminUserDetail | undefined;
+  let failure: ApiError | undefined;
   try {
     user = await adminApi.user(token, id);
   } catch (e) {
     if (!(e instanceof ApiError)) throw e;
-    if (e.status === 404) notFound();
+    failure = e;
+  }
+  // redirect()/notFound() throw, so they stay outside the try/catch.
+  if (failure instanceof NoAccessError) redirect("/logout");
+  if (failure?.status === 404) notFound();
+  if (!user) {
     return (
       <>
         <PageHeader title="Usuario" />
-        <ErrorState message={e.message} />
+        <ErrorState message={failure?.message ?? "Error"} />
       </>
     );
   }
