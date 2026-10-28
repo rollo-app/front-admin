@@ -3,7 +3,7 @@ import { cn } from "@/lib/cn";
 import { buildPageHref, PAGE_SIZES, type PageParams } from "@/lib/page-params";
 import { formatInt } from "@/lib/format";
 
-const linkCls = "rounded-md border px-3 py-1.5 text-sm hover:bg-muted";
+const linkCls = "rounded-full border px-3 py-1.5 text-sm hover:bg-muted";
 const disabledCls = "pointer-events-none rounded-md border px-3 py-1.5 text-sm opacity-50";
 
 export function Pagination({

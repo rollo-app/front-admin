@@ -39,7 +39,7 @@ export function DataTable<T>({
       {page.items.length === 0 ? (
         <EmptyState text={emptyText} />
       ) : (
-        <div className="rounded-lg border">
+        <div className="rounded-[var(--radius)] border bg-card">
           <Table>
             <TableHeader>
               <TableRow>

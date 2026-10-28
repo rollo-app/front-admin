@@ -41,7 +41,7 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     ["Email", user.email],
     ["Nombre", user.name ?? "—"],
     ["Usuario", user.username ? `@${user.username}` : "—"],
-    ["Rol", user.appRole === "superadmin" ? <Badge>superadmin</Badge> : "usuario"],
+    ["Rol", user.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : "usuario"],
     ["Rollos", formatInt(user.tripCount)],
     ["Fotos", formatInt(user.mediaCount)],
     ["Último acceso", user.lastSeenAt === null ? "nunca" : relativeMinutes(user.lastSeenAt)],

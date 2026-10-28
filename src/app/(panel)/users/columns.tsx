@@ -15,7 +15,7 @@ export const userColumns: ColumnDef<AdminUser>[] = [
       </span>
     ),
   },
-  { header: "Rol", cell: (u) => (u.appRole === "superadmin" ? <Badge>superadmin</Badge> : null) },
+  { header: "Rol", cell: (u) => (u.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : null) },
   { header: "Rollos", cell: (u) => formatInt(u.tripCount), meta: { className: "text-right tabular-nums" } },
   { header: "Fotos", cell: (u) => formatInt(u.mediaCount), meta: { className: "text-right tabular-nums" } },
   {
