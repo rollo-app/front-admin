@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
 import { ApiError, NoAccessError, backendFetch } from "./api";
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -19,6 +20,15 @@ describe("backendFetch", () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(json(404, { error: "No encontrado" })).mockResolvedValueOnce(json(503, { error: "Rollo está en mantenimiento, probá más tarde" }));
     await expect(backendFetch("/admin/users")).rejects.toBeInstanceOf(NoAccessError);
     await expect(backendFetch("/trips")).rejects.toMatchObject({ status: 503, message: "Rollo está en mantenimiento, probá más tarde" } satisfies Partial<ApiError>);
+  });
+  it("throws when BACKEND_URL is empty", async () => {
+    const prev = process.env.BACKEND_URL;
+    process.env.BACKEND_URL = "";
+    try {
+      await expect(backendFetch("/x")).rejects.toThrow("BACKEND_URL no está configurada");
+    } finally {
+      process.env.BACKEND_URL = prev;
+    }
   });
   it("returns undefined on 204", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));

@@ -1,3 +1,4 @@
+import "server-only";
 import type { AdminMe, AdminUser, AdminUserDetail, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
 
 export class ApiError extends Error {
@@ -20,6 +21,7 @@ export async function backendFetch<T>(
   init: { method?: string; body?: unknown; token?: string | null } = {},
 ): Promise<T> {
   const base = (process.env.BACKEND_URL ?? "").replace(/\/+$/, "");
+  if (!base) throw new Error("BACKEND_URL no está configurada");
   const headers = new Headers();
   if (init.token) headers.set("authorization", `Bearer ${init.token}`);
   if (init.body !== undefined) headers.set("content-type", "application/json");
