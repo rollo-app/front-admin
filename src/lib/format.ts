@@ -12,6 +12,13 @@ export function formatDate(ms: number): string {
   return `${p(d.getUTCDate())}/${p(d.getUTCMonth() + 1)}/${d.getUTCFullYear()}`;
 }
 
+/** epoch ms -> "dd/mm/yyyy hh:mm" (UTC-3). */
+export function formatDateTime(ms: number): string {
+  const d = new Date(ms - 3 * 3600_000);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${formatDate(ms)} ${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;
+}
+
 /** "hace 3 min" / "hace 2 h" / "hace 5 días" */
 export function relativeMinutes(fromMs: number, nowMs = Date.now()): string {
   const min = Math.max(0, Math.floor((nowMs - fromMs) / 60_000));

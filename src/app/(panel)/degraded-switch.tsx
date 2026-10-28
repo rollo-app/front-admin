@@ -13,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/format";
+import { formatDateTime } from "@/lib/format";
 import type { DegradedMode } from "@/lib/types";
 import { setDegradedMode } from "./dashboard.actions";
 
@@ -41,13 +41,15 @@ export function DegradedSwitch({ state }: { state: DegradedMode }) {
     <div className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
       <div className="flex items-center justify-between gap-3">
         <span className="text-sm font-medium">Modo degradado: {state.on ? "prendido" : "apagado"}</span>
-        <Button variant={activating ? "outline" : "destructive"} size="sm" onClick={() => { setError(null); setOpen(true); }}>
+        <Button variant={activating ? "destructive" : "outline"} size="sm" onClick={() => { setError(null); setOpen(true); }}>
           {activating ? "Activar" : "Desactivar"}
         </Button>
       </div>
-      {state.updatedBy && state.updatedAt !== null ? (
+      {state.updatedAt !== null ? (
         <p className="text-xs text-muted-foreground">
-          cambiado por {state.updatedBy.email} el {formatDate(state.updatedAt)}
+          {state.updatedBy
+            ? `cambiado por ${state.updatedBy.email} el ${formatDateTime(state.updatedAt)}`
+            : `cambiado con ADMIN_TOKEN el ${formatDateTime(state.updatedAt)}`}
         </p>
       ) : null}
       {error ? (

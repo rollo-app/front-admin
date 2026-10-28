@@ -32,8 +32,16 @@ function messageOf(reason: unknown): string {
   throw reason;
 }
 
+function dayMinus(day: string, n: number): string {
+  const [y, mo, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, mo - 1, d - n)).toISOString().slice(0, 10);
+}
+
+/** Sum over the 7 calendar days ending at latestDay (missed snapshot days don't widen the window). */
 function weekSum(m: MetricsResponse, key: Metric): number {
-  return m.series.slice(-7).reduce((acc, p) => acc + (p.values[key] ?? 0), 0);
+  if (m.latestDay === null) return 0;
+  const from = dayMinus(m.latestDay, 6);
+  return m.series.filter((p) => p.day >= from && p.day <= m.latestDay!).reduce((acc, p) => acc + (p.values[key] ?? 0), 0);
 }
 
 function latest(m: MetricsResponse, key: Metric): number | null {
@@ -53,15 +61,15 @@ function Stats({ m }: { m: MetricsResponse }) {
   );
 }
 
-function Usage({ u }: { u: UsageResponse }) {
-  const stale = u.usage !== null && Date.now() - u.usage.fetchedAt > STALE_MS;
+function Usage({ u, nowMs }: { u: UsageResponse; nowMs: number }) {
+  const stale = u.usage !== null && nowMs - u.usage.fetchedAt > STALE_MS;
   return (
     <Card>
       <CardHeader>
         <CardTitle>Uso de Cloudflare (hoy, UTC)</CardTitle>
         {u.usage ? (
           <p className={`text-xs ${stale ? "text-warning" : "text-muted-foreground"}`}>
-            Actualizado {relativeMinutes(u.usage.fetchedAt)}
+            Actualizado {relativeMinutes(u.usage.fetchedAt, nowMs)}
           </p>
         ) : null}
       </CardHeader>
@@ -79,13 +87,18 @@ function Usage({ u }: { u: UsageResponse }) {
   );
 }
 
-export default async function DashboardPage() {
-  const { token } = await requireSession();
+async function loadDashboard(token: string | null) {
   const [metrics, usage, degraded] = await Promise.allSettled([
     adminApi.metrics(token, 30),
     adminApi.usage(token),
     adminApi.degraded(token),
   ]);
+  return { metrics, usage, degraded, nowMs: Date.now() };
+}
+
+export default async function DashboardPage() {
+  const { token } = await requireSession();
+  const { metrics, usage, degraded, nowMs } = await loadDashboard(token);
 
   const m = metrics.status === "fulfilled" ? metrics.value : null;
   const subtitle = m?.latestDay ? `al cierre del ${formatUtcDay(m.latestDay)}` : undefined;
@@ -107,7 +120,7 @@ export default async function DashboardPage() {
           </>
         )}
         <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          {usage.status === "rejected" ? <ErrorState message={messageOf(usage.reason)} /> : <Usage u={usage.value} />}
+          {usage.status === "rejected" ? <ErrorState message={messageOf(usage.reason)} /> : <Usage u={usage.value} nowMs={nowMs} />}
           {degraded.status === "rejected" ? <ErrorState message={messageOf(degraded.reason)} /> : <DegradedSwitch state={degraded.value} />}
         </div>
       </div>

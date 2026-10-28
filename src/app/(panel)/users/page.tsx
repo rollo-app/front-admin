@@ -9,28 +9,30 @@ import { userColumns } from "./columns";
 export default async function UsersPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = parsePageParams(await searchParams, { sort: "createdAt" });
   const { token } = await requireSession();
-  let body: React.ReactNode;
+  let page: Awaited<ReturnType<typeof adminApi.users>> | null = null;
+  let errorMessage: string | null = null;
   try {
-    const page = await adminApi.users(token, toBackendQuery(params));
-    body = (
-      <DataTable
-        page={page}
-        columns={userColumns}
-        pathname="/users"
-        params={params}
-        searchPlaceholder="Buscar por email, nombre o usuario"
-        rowHref={(u) => `/users/${u.id}`}
-        emptyText="No hay usuarios que coincidan"
-      />
-    );
+    page = await adminApi.users(token, toBackendQuery(params));
   } catch (e) {
     if (!(e instanceof ApiError)) throw e;
-    body = <ErrorState message={e.message} />;
+    errorMessage = e.message;
   }
   return (
     <>
       <PageHeader title="Usuarios" />
-      {body}
+      {page ? (
+        <DataTable
+          page={page}
+          columns={userColumns}
+          pathname="/users"
+          params={params}
+          searchPlaceholder="Buscar por email, nombre o usuario"
+          rowHref={(u) => `/users/${u.id}`}
+          emptyText="No hay usuarios que coincidan"
+        />
+      ) : (
+        <ErrorState message={errorMessage ?? "Error"} />
+      )}
     </>
   );
 }
