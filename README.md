@@ -23,7 +23,8 @@ Una sola: `BACKEND_URL` (server-only). Dev: `http://localhost:8787` en `.env.loc
 1. En el repo del backend: `npm run dev` (puerto 8787).
 2. Hacé un primer login (así se crea el usuario) y promovelo:
    ```bash
-   wrangler d1 execute rollo --local --command "UPDATE users SET app_role='superadmin' WHERE email='vos@mail.com'"
+   # desde el repo del backend
+   npx wrangler d1 execute rollo --local --command "UPDATE users SET app_role='superadmin' WHERE email='vos@mail.com'"
    ```
 3. Acá: `npm install && npm run dev`, y logueate con el código que imprime la consola del backend.
 
@@ -49,3 +50,11 @@ Vercel: producción desde `main`, previews desde `develop` y PRs. `BACKEND_URL` 
 - La búsqueda es case-insensitive solo ASCII (`ANGELA` no matchea `Ángela`).
 - `formatDate` usa UTC-3 fijo.
 - Los días de métricas son UTC.
+
+## Límites y riesgos conocidos
+
+- **Login bloqueable desde Vercel.** El backend limita los intentos de `/login` por IP usando `cf-connecting-ip`, y desde el panel esa IP es la de egreso compartida de Vercel, no la del usuario. Unos ~20 envíos a `/login` por hora, de cualquiera, bloquean el login del panel durante una hora. Mitigación (a configurar en Vercel, no está en el código): una regla de rate-limit en el Vercel Firewall sobre `POST /login` por IP de cliente.
+- **Fallback de emergencia** (si el panel no deja entrar, p. ej. para prender el modo degradado):
+  ```bash
+  curl -X PUT https://rollo-api.juanifraga.com/admin/degraded-mode -H "Authorization: Bearer $ADMIN_TOKEN" -H "content-type: application/json" -d '{"on":true}'
+  ```

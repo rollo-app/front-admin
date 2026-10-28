@@ -30,3 +30,4 @@ Copy de UI en español rioplatense; código y tests en inglés; commits en espa�
 
 ## Limitaciones conocidas
 Búsqueda case-insensitive solo ASCII; `formatDate` con UTC-3 fijo; días de métricas en UTC.
+Login del panel: el backend limita `/login` por `cf-connecting-ip`, que acá es la IP compartida de Vercel (~20 envíos/h de cualquiera lo bloquean 1 h). Mitigar con una regla de rate-limit en Vercel Firewall sobre `POST /login`; fallback: `PUT /admin/degraded-mode` con `ADMIN_TOKEN` (ver README, "Límites y riesgos conocidos").
