@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { ErrorState } from "@/components/data/error-state";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ApiError, NoAccessError, adminApi } from "@/lib/api";
+import { ApiError, adminApi } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
 import { formatDate, formatInt, relativeMinutes } from "@/lib/format";
 import type { AdminUserDetail, TripState } from "@/lib/types";
@@ -25,8 +25,9 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
     if (!(e instanceof ApiError)) throw e;
     failure = e;
   }
-  // redirect()/notFound() throw, so they stay outside the try/catch.
-  if (failure instanceof NoAccessError) redirect("/logout");
+  // The session was validated by requireSession() in this same render, so a 404 here (even one mapped to
+  // NoAccessError) means the user does not exist; a session revoked mid-render is handled on the next navigation.
+  // notFound() throws, so it stays outside the try/catch.
   if (failure?.status === 404) notFound();
   if (!user) {
     return (
