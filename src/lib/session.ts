@@ -1,7 +1,9 @@
 import "server-only";
 import { cookies } from "next/headers";
 
-export const SESSION_COOKIE = "rollo_admin_session";
+import { SESSION_COOKIE } from "./session-constants";
+
+export { SESSION_COOKIE };
 
 export async function getSessionToken(): Promise<string | null> {
   return (await cookies()).get(SESSION_COOKIE)?.value ?? null;
