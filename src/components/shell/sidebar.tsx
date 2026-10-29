@@ -1,49 +1,90 @@
 "use client";
 
 import Link from "next/link";
+import { LogOutIcon } from "lucide-react";
 import { logout } from "@/app/login/actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Sidebar as UiSidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, isActive } from "./nav-items";
 
-const ITEM = "flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 text-sm font-medium";
+const ITEM =
+  "min-h-9 gap-2 rounded-full px-3 text-sm font-medium text-foreground/70 motion-safe:transition-colors hover:bg-card hover:text-foreground";
+const ACTIVE =
+  "bg-card text-primary-text shadow-sm hover:text-primary-text data-active:bg-card data-active:font-medium data-active:text-primary-text";
 
 export function Sidebar({ email, currentPath }: { email: string; currentPath: string }) {
+  const { isMobile, setOpenMobile } = useSidebar();
+  const initial = (email.trim().charAt(0) || "?").toUpperCase();
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
-      <div className="px-3 pt-1 text-lg font-semibold tracking-tight">Rollo</div>
-      <nav aria-label="Principal" className="flex flex-1 flex-col gap-1">
-        {NAV_ITEMS.map((item) => {
-          if (item.soon) {
-            return (
-              <span key={item.href} aria-disabled="true" className={cn(ITEM, "cursor-not-allowed text-muted-foreground")}>
-                {item.label}
-                <Badge variant="secondary">próximamente</Badge>
-              </span>
-            );
-          }
-          const active = isActive(item.href, currentPath);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(ITEM, active ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted")}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
-      <div className="flex flex-col gap-2 border-t pt-4">
-        <p className="truncate px-3 text-xs text-muted-foreground">{email}</p>
+    <UiSidebar className="border-sidebar-border">
+      <SidebarHeader className="flex-row items-baseline gap-2 px-5 pt-5 pb-2">
+        <span className="text-lg font-semibold tracking-tight">Rollo</span>
+        <span className="text-xs text-muted-foreground">Panel</span>
+      </SidebarHeader>
+      <SidebarContent className="px-3 py-2">
+        <nav aria-label="Principal">
+          <SidebarMenu className="gap-1">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              if (item.soon) {
+                return (
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      render={<span />}
+                      aria-disabled="true"
+                      className={cn(ITEM, "cursor-not-allowed opacity-45 hover:bg-transparent hover:text-foreground/70 aria-disabled:opacity-45")}
+                    >
+                      <Icon aria-hidden="true" />
+                      <span>{item.label}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">pronto</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              }
+              const active = isActive(item.href, currentPath);
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <SidebarMenuButton
+                    render={<Link href={item.href} onClick={() => isMobile && setOpenMobile(false)} />}
+                    isActive={active}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(ITEM, active && ACTIVE)}
+                  >
+                    <Icon aria-hidden="true" />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
+          </SidebarMenu>
+        </nav>
+      </SidebarContent>
+      <SidebarFooter className="flex-row items-center gap-2 p-4">
+        <span
+          aria-hidden="true"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-medium text-secondary-foreground"
+        >
+          {initial}
+        </span>
+        <span title={email} className="min-w-0 flex-1 truncate text-xs text-muted-foreground">
+          {email}
+        </span>
         <form action={logout}>
-          <Button type="submit" variant="outline" className="w-full">
-            Salir
+          <Button type="submit" variant="ghost" aria-label="Salir" className="size-10">
+            <LogOutIcon aria-hidden="true" />
           </Button>
         </form>
-      </div>
-    </div>
+      </SidebarFooter>
+    </UiSidebar>
   );
 }
