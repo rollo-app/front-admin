@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+const mobile = vi.hoisted(() => ({ value: false }));
+vi.mock("@/hooks/use-mobile", () => ({ useIsMobile: () => mobile.value }));
 vi.mock("@/app/login/actions", () => ({ logout: vi.fn() }));
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { isActive, titleFor } from "./nav-items";
 import { Sidebar } from "./sidebar";
 
@@ -49,5 +52,28 @@ describe("nav helpers", () => {
     expect(titleFor("/")).toBe("Dashboard");
     expect(titleFor("/users")).toBe("Usuarios");
     expect(titleFor("/users/abc")).toBe("Usuario");
+  });
+});
+
+describe("collapse behavior", () => {
+  it("ignores Cmd/Ctrl+B and the trigger on desktop", async () => {
+    mobile.value = false;
+    renderSidebar("/");
+    await userEvent.keyboard("{Control>}b{/Control}");
+    expect(document.querySelector("[data-slot=sidebar]")).toHaveAttribute("data-state", "expanded");
+    expect(document.cookie).not.toContain("sidebar_state");
+  });
+  it("opens the mobile Sheet from the trigger", async () => {
+    mobile.value = true;
+    render(
+      <SidebarProvider>
+        <SidebarTrigger aria-label="Abrir menú" />
+        <Sidebar email="su@rollo.test" currentPath="/" />
+      </SidebarProvider>,
+    );
+    expect(screen.queryByRole("link", { name: "Usuarios" })).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Abrir menú" }));
+    expect(await screen.findByRole("link", { name: "Usuarios" })).toBeInTheDocument();
+    mobile.value = false;
   });
 });

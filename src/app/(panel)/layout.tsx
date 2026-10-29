@@ -13,12 +13,20 @@ async function degradedOn(token: string | null): Promise<boolean> {
   }
 }
 
+// Streams on its own so a slow /admin/degraded-mode never stalls the shell or the page.
+async function Banner({ token }: { token: string | null }) {
+  return <DegradedBanner on={await degradedOn(token)} />;
+}
+
 // cacheComponents: cookie access must sit under a Suspense boundary.
 async function Gate({ children }: { children: React.ReactNode }) {
   const { me, token } = await requireSession();
-  const on = await degradedOn(token);
   return (
-    <AppShell email={me.email ?? me.name ?? "Superadmin"} banner={<DegradedBanner on={on} />}>
+    <AppShell email={me.email ?? me.name ?? "Superadmin"} banner={
+        <Suspense fallback={null}>
+          <Banner token={token} />
+        </Suspense>
+      }>
       {children}
     </AppShell>
   );

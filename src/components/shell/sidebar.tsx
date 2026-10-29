@@ -26,7 +26,7 @@ export function Sidebar({ email, currentPath }: { email: string; currentPath: st
   const { isMobile, setOpenMobile } = useSidebar();
   const initial = (email.trim().charAt(0) || "?").toUpperCase();
   return (
-    <UiSidebar className="border-sidebar-border">
+    <UiSidebar className="group-data-[side=left]:border-r-0">
       <SidebarHeader className="flex-row items-baseline gap-2 px-5 pt-5 pb-2">
         <span className="text-lg font-semibold tracking-tight">Rollo</span>
         <span className="text-xs text-muted-foreground">Panel</span>
