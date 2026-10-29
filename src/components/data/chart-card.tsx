@@ -15,7 +15,7 @@ export type ChartKey = { key: string; label: string; color: string };
 
 export function ChartCard({ title, series, keys }: { title: string; series: ChartSeriesPoint[]; keys: ChartKey[] }) {
   const config: ChartConfig = Object.fromEntries(keys.map((k) => [k.key, { label: k.label, color: k.color }]));
-  const data = series.map((p) => ({ day: p.day, ...p.values }));
+  const data = series.map((p) => ({ ...p.values, day: p.day }));
   return (
     <Card>
       <CardHeader>

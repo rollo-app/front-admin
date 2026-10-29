@@ -8,7 +8,7 @@ import { startLogin, verifyLogin, type LoginState } from "./actions";
 
 function FormError({ message }: { message?: string }) {
   return message ? (
-    <p role="alert" className="text-sm text-destructive">
+    <p role="alert" className="text-sm text-destructive-text">
       {message}
     </p>
   ) : null;
