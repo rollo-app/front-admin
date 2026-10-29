@@ -18,14 +18,18 @@ export type AdminUser = {
   name: string | null;
   username: string | null;
   appRole: "user" | "superadmin";
-  badge: "founder" | "first_edition" | null;
+  badge: Badge | null;
   createdAt: number;
   lastSeenAt: number | null;
   tripCount: number;
   mediaCount: number;
 };
 
+export type Badge = "founder" | "first_edition";
+
 export type AdminUserDetail = AdminUser & {
+  bio: string | null;
+  unlimitedRollos: boolean;
   trips: { id: string; name: string; role: "admin" | "member"; state: TripState }[];
 };
 

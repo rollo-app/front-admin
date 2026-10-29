@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { ColumnDef } from "@/components/data/data-table";
 import { formatDate, formatInt, relativeMinutes } from "@/lib/format";
+import { BADGE_LABEL } from "@/lib/badges";
 import type { AdminUser } from "@/lib/types";
 
 export const userColumns: ColumnDef<AdminUser>[] = [
@@ -16,6 +17,10 @@ export const userColumns: ColumnDef<AdminUser>[] = [
     ),
   },
   { header: "Rol", cell: (u) => (u.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : null) },
+  {
+    header: "Badge",
+    cell: (u) => (u.badge ? <Badge variant="secondary">{BADGE_LABEL[u.badge]}</Badge> : null),
+  },
   { header: "Rollos", cell: (u) => formatInt(u.tripCount), meta: { className: "text-right tabular-nums" } },
   { header: "Fotos", cell: (u) => formatInt(u.mediaCount), meta: { className: "text-right tabular-nums" } },
   {

@@ -2,12 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ErrorState } from "@/components/data/error-state";
 import { PageHeader } from "@/components/shell/page-header";
-import { Badge } from "@/components/ui/badge";
+import { UserProfile } from "./user-profile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, adminApi } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
-import { formatDate, formatInt, relativeMinutes } from "@/lib/format";
 import type { AdminUserDetail, TripState } from "@/lib/types";
 
 const STATE_LABEL: Record<TripState, string> = {
@@ -37,33 +36,10 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
       </>
     );
   }
-  const fields: [string, React.ReactNode][] = [
-    ["Email", user.email],
-    ["Nombre", user.name ?? "—"],
-    ["Usuario", user.username ? `@${user.username}` : "—"],
-    ["Rol", user.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : "usuario"],
-    ["Rollos", formatInt(user.tripCount)],
-    ["Fotos", formatInt(user.mediaCount)],
-    ["Último acceso", user.lastSeenAt === null ? "nunca" : relativeMinutes(user.lastSeenAt)],
-    ["Alta", formatDate(user.createdAt)],
-  ];
   return (
     <>
-      <PageHeader title={user.name ?? user.email} subtitle={user.name ? user.email : undefined} />
       <div className="space-y-6">
-        <Card>
-          <CardHeader><CardTitle>Datos</CardTitle></CardHeader>
-          <CardContent>
-            <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-              {fields.map(([k, v]) => (
-                <div key={k} className="flex justify-between gap-4 border-b pb-2">
-                  <dt className="text-muted-foreground">{k}</dt>
-                  <dd>{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
+        <UserProfile user={user} />
         <Card>
           <CardHeader><CardTitle>Rollos</CardTitle></CardHeader>
           <CardContent>

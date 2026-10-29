@@ -1,5 +1,5 @@
 import "server-only";
-import type { AdminMe, AdminUser, AdminUserDetail, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
+import type { AdminMe, AdminUser, AdminUserDetail, Badge, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
 
 export class ApiError extends Error {
   constructor(readonly status: number, message: string) {
@@ -41,6 +41,14 @@ export async function backendFetch<T>(
   return data as T;
 }
 
+export type UserPatch = Partial<{
+  name: string;
+  username: string;
+  bio: string | null;
+  badge: Badge | null;
+  unlimitedRollos: boolean;
+}>;
+
 export const adminApi = {
   me: (token: string | null) => backendFetch<AdminMe>("/admin/me", { token }),
   metrics: (token: string | null, days = 30) => backendFetch<MetricsResponse>(`/admin/metrics?days=${days}`, { token }),
@@ -52,6 +60,8 @@ export const adminApi = {
     backendFetch<Page<AdminUser>>(`/admin/users?${query}`, { token }),
   user: (token: string | null, id: string) =>
     backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { token }),
+  editUser: (token: string | null, id: string, patch: UserPatch) =>
+    backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { method: "PATCH", body: patch, token }),
 };
 
 export const authApi = {
