@@ -51,4 +51,43 @@ describe("EditUserForm", () => {
     await u.click(screen.getByRole("button", { name: "Guardar" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Ese nombre de usuario ya está en uso");
   });
+
+  it("clears the description with an empty string", async () => {
+    const u = userEvent.setup();
+    vi.mocked(updateUser).mockResolvedValue({ ok: true, user: { ...user, bio: null } });
+    render(<EditUserForm user={user} />);
+    await u.clear(screen.getByLabelText("Descripción"));
+    await u.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(updateUser).toHaveBeenCalledWith("u1", { bio: "" });
+  });
+
+  it("does not send an unchanged username, even @-prefixed or uppercase", async () => {
+    const u = userEvent.setup();
+    vi.mocked(updateUser).mockResolvedValue({ ok: true, user });
+    render(<EditUserForm user={user} />);
+    const input = screen.getByLabelText("Username");
+    await u.clear(input);
+    await u.type(input, "@ANA");
+    await u.type(screen.getByLabelText("Nombre"), "!");
+    await u.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(updateUser).toHaveBeenCalledWith("u1", { name: "Ana!" });
+  });
+
+  it("does not count a whitespace-only name change", async () => {
+    render(<EditUserForm user={user} />);
+    await userEvent.setup().type(screen.getByLabelText("Nombre"), "  ");
+    expect(screen.getByRole("button", { name: "Guardar" })).toBeDisabled();
+  });
+
+  it("links a username error to the field", async () => {
+    const u = userEvent.setup();
+    vi.mocked(updateUser).mockResolvedValue({ ok: false, error: "Ese nombre de usuario ya está en uso.", field: "username" });
+    render(<EditUserForm user={user} />);
+    await u.type(screen.getByLabelText("Username"), "2");
+    await u.click(screen.getByRole("button", { name: "Guardar" }));
+    const input = screen.getByLabelText("Username");
+    expect(await screen.findByRole("alert")).toHaveTextContent("ya está en uso");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(input.getAttribute("aria-describedby")).toContain("edit-username-error");
+  });
 });

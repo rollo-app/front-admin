@@ -1,20 +1,37 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageHeader } from "@/components/shell/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BADGE_LABEL } from "@/lib/badges";
-import { formatDate, formatInt, relativeMinutes } from "@/lib/format";
+import { formatInt } from "@/lib/format";
 import type { AdminUserDetail } from "@/lib/types";
 import { EditUserForm } from "./edit-user-form";
 import { SavedNote } from "./saved-note";
 
-export function UserProfile({ user: initial }: { user: AdminUserDetail }) {
+export function UserProfile({
+  user: initial,
+  lastSeen,
+  createdAt,
+}: {
+  user: AdminUserDetail;
+  /** Formatted on the server: relative times must not be computed during client render. */
+  lastSeen: string;
+  createdAt: string;
+}) {
   const [user, setUser] = useState(initial);
   const [editing, setEditing] = useState(false);
   const [savedAt, setSavedAt] = useState(0);
+  const editButton = useRef<HTMLButtonElement>(null);
+  const wasEditing = useRef(false);
+
+  // Entering edit mode focuses Nombre (autoFocus in the form); leaving it returns focus to "Editar".
+  useEffect(() => {
+    if (wasEditing.current && !editing) editButton.current?.focus();
+    wasEditing.current = editing;
+  }, [editing]);
 
   const fields: [string, React.ReactNode][] = [
     ["Email", user.email],
@@ -26,8 +43,8 @@ export function UserProfile({ user: initial }: { user: AdminUserDetail }) {
     ["Rol", user.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : "usuario"],
     ["Rollos", formatInt(user.tripCount)],
     ["Fotos", formatInt(user.mediaCount)],
-    ["Último acceso", user.lastSeenAt === null ? "nunca" : relativeMinutes(user.lastSeenAt)],
-    ["Alta", formatDate(user.createdAt)],
+    ["Último acceso", lastSeen],
+    ["Alta", createdAt],
   ];
 
   return (
@@ -37,7 +54,7 @@ export function UserProfile({ user: initial }: { user: AdminUserDetail }) {
         subtitle={user.name ? user.email : undefined}
         actions={
           editing ? null : (
-            <Button variant="outline" size="sm" onClick={() => setEditing(true)}>Editar</Button>
+            <Button ref={editButton} variant="outline" size="sm" onClick={() => setEditing(true)}>Editar</Button>
           )
         }
       />
@@ -64,9 +81,9 @@ export function UserProfile({ user: initial }: { user: AdminUserDetail }) {
                   </div>
                 ))}
               </dl>
-              {savedAt ? <div className="mt-3"><SavedNote key={savedAt} /></div> : null}
             </>
           )}
+          {editing ? null : <div className="mt-3 min-h-5"><SavedNote savedAt={savedAt} /></div>}
         </CardContent>
       </Card>
     </>

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ApiError, adminApi } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
+import { formatDate, relativeMinutes } from "@/lib/format";
 import type { AdminUserDetail, TripState } from "@/lib/types";
 
 const STATE_LABEL: Record<TripState, string> = {
@@ -39,7 +40,12 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
   return (
     <>
       <div className="space-y-6">
-        <UserProfile user={user} />
+        <UserProfile
+          key={user.id}
+          user={user}
+          lastSeen={user.lastSeenAt === null ? "nunca" : relativeMinutes(user.lastSeenAt)}
+          createdAt={formatDate(user.createdAt)}
+        />
         <Card>
           <CardHeader><CardTitle>Rollos</CardTitle></CardHeader>
           <CardContent>

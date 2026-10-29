@@ -31,13 +31,14 @@ export function EditUserForm({
   const [badge, setBadge] = useState<Badge | "">(user.badge ?? "");
   const [unlimited, setUnlimited] = useState(user.unlimitedRollos);
   const [error, setError] = useState<string>();
-  const [saved, setSaved] = useState(false);
+  const [usernameError, setUsernameError] = useState<string>();
+  const [savedAt, setSavedAt] = useState(0);
   const [pending, startTransition] = useTransition();
 
   const patch = {
     ...(name.trim() !== (user.name ?? "") ? { name: name.trim() } : {}),
     ...(normUsername(username) !== (user.username ?? "") ? { username: username.trim() } : {}),
-    ...(bio.trim() !== (user.bio ?? "") ? { bio: bio.trim() === "" ? null : bio.trim() } : {}),
+    ...(bio.trim() !== (user.bio ?? "") ? { bio: bio.trim() } : {}),
     ...(badge !== (user.badge ?? "") ? { badge: badge === "" ? null : badge } : {}),
     ...(unlimited !== user.unlimitedRollos ? { unlimitedRollos: unlimited } : {}),
   };
@@ -46,11 +47,14 @@ export function EditUserForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(undefined);
+    setUsernameError(undefined);
     startTransition(async () => {
       const res = await updateUser(user.id, patch);
       if (res.ok) {
-        setSaved(true);
+        setSavedAt(Date.now());
         onSaved?.(res.user);
+      } else if (res.field === "username") {
+        setUsernameError(res.error);
       } else {
         setError(res.error);
       }
@@ -61,7 +65,7 @@ export function EditUserForm({
     <form onSubmit={submit} className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="edit-name">Nombre</Label>
-        <Input id="edit-name" value={name} maxLength={30} onChange={(e) => setName(e.target.value)} />
+        <Input id="edit-name" autoFocus value={name} maxLength={30} onChange={(e) => setName(e.target.value)} />
       </div>
       <div className="flex flex-col gap-2">
         <Label htmlFor="edit-username">Username</Label>
@@ -72,10 +76,14 @@ export function EditUserForm({
             value={username}
             maxLength={30}
             autoCapitalize="none"
-            aria-describedby="edit-username-hint"
+            aria-invalid={usernameError ? true : undefined}
+            aria-describedby={usernameError ? "edit-username-error edit-username-hint" : "edit-username-hint"}
             onChange={(e) => setUsername(e.target.value)}
           />
         </div>
+        {usernameError ? (
+          <p id="edit-username-error" role="alert" className="text-sm text-destructive-text">{usernameError}</p>
+        ) : null}
         <p id="edit-username-hint" className="text-xs text-muted-foreground">Minúsculas, números, punto y guion bajo</p>
       </div>
       <div className="flex flex-col gap-2">
@@ -125,10 +133,10 @@ export function EditUserForm({
         </div>
       </div>
       {error ? <p role="alert" className="text-sm text-destructive-text">{error}</p> : null}
-      {saved && !onSaved ? <SavedNote /> : null}
+      {onSaved ? null : <SavedNote savedAt={savedAt} />}
       <div className="flex gap-2">
         <Button type="submit" disabled={pending || !changed}>Guardar</Button>
-        <Button type="button" variant="ghost" onClick={onCancel}>Cancelar</Button>
+        <Button type="button" variant="ghost" disabled={pending} onClick={onCancel}>Cancelar</Button>
       </div>
     </form>
   );

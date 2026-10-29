@@ -44,7 +44,7 @@ export async function backendFetch<T>(
 export type UserPatch = Partial<{
   name: string;
   username: string;
-  bio: string | null;
+  bio: string;
   badge: Badge | null;
   unlimitedRollos: boolean;
 }>;
