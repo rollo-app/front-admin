@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ApiError, adminApi } from "@/lib/api";
 import { requireSession } from "@/lib/auth";
 import { formatBytes, formatUtcDay, relativeMinutes } from "@/lib/format";
-import type { Metric, MetricsResponse, UsageMetric, UsageResponse } from "@/lib/types";
+import type { DegradedMode, Metric, MetricsResponse, UsageMetric, UsageResponse } from "@/lib/types";
+import { DegradedNote } from "./degraded-note";
 import { DegradedSwitch } from "./degraded-switch";
 
 const USAGE_METERS: { key: UsageMetric; label: string }[] = [
@@ -61,28 +62,48 @@ function Stats({ m }: { m: MetricsResponse }) {
   );
 }
 
-function Usage({ u, nowMs }: { u: UsageResponse; nowMs: number }) {
-  const stale = u.usage !== null && nowMs - u.usage.fetchedAt > STALE_MS;
+function Usage({ u, usageError, nowMs, degraded }: { u: UsageResponse | null; usageError: string | null; nowMs: number; degraded: PromiseSettledResult<DegradedMode> }) {
+  const stale = u?.usage != null && nowMs - u.usage.fetchedAt > STALE_MS;
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Uso de Cloudflare (hoy, UTC)</CardTitle>
-        {u.usage ? (
-          <p className={`text-xs ${stale ? "text-warning" : "text-muted-foreground"}`}>
-            Actualizado {relativeMinutes(u.usage.fetchedAt, nowMs)}
+      <CardHeader className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <CardTitle>Uso de Cloudflare (hoy, UTC)</CardTitle>
+          {u?.usage ? (
+            <p className={`text-xs ${stale ? "text-warning-text" : "text-muted-foreground"}`}>
+              Actualizado {relativeMinutes(u.usage.fetchedAt, nowMs)}
+            </p>
+          ) : null}
+        </div>
+        {degraded.status === "fulfilled" ? (
+          <DegradedSwitch state={degraded.value} />
+        ) : (
+          <p role="alert" className="text-xs text-destructive-text">
+            No pudimos leer el modo degradado: {messageOf(degraded.reason)}
           </p>
-        ) : null}
-      </CardHeader>
-      <CardContent className="grid gap-3 sm:grid-cols-2">
-        {USAGE_METERS.map(({ key, label }) =>
-          u.usage ? (
-            <UsageMeter key={key} label={label} value={u.usage.values[key]} limit={u.usage.limits[key]} />
-          ) : (
-            <UsageMeter.Empty key={key} label={label} />
-          ),
         )}
-        <UsageMeter label="Almacenamiento" value={u.storage.usedBytes} limit={u.storage.limitBytes} format={formatBytes} />
-      </CardContent>
+      </CardHeader>
+      {degraded.status === "fulfilled" ? (
+        <div className="px-(--card-spacing) empty:hidden">
+          <DegradedNote state={degraded.value} />
+        </div>
+      ) : null}
+      {u ? (
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          {USAGE_METERS.map(({ key, label }) =>
+            u.usage ? (
+              <UsageMeter key={key} label={label} value={u.usage.values[key]} limit={u.usage.limits[key]} />
+            ) : (
+              <UsageMeter.Empty key={key} label={label} />
+            ),
+          )}
+          <UsageMeter label="Almacenamiento" value={u.storage.usedBytes} limit={u.storage.limitBytes} format={formatBytes} />
+        </CardContent>
+      ) : (
+        <CardContent>
+          <ErrorState message={usageError ?? ""} />
+        </CardContent>
+      )}
     </Card>
   );
 }
@@ -106,7 +127,7 @@ export default async function DashboardPage() {
   return (
     <>
       <PageHeader title="Dashboard" subtitle={subtitle} />
-      <div className="space-y-6">
+      <div className="flex flex-col gap-6">
         {metrics.status === "rejected" ? (
           <ErrorState message={messageOf(metrics.reason)} />
         ) : (
@@ -119,10 +140,12 @@ export default async function DashboardPage() {
             )}
           </>
         )}
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          {usage.status === "rejected" ? <ErrorState message={messageOf(usage.reason)} /> : <Usage u={usage.value} nowMs={nowMs} />}
-          {degraded.status === "rejected" ? <ErrorState message={messageOf(degraded.reason)} /> : <DegradedSwitch state={degraded.value} />}
-        </div>
+        <Usage
+          u={usage.status === "fulfilled" ? usage.value : null}
+          usageError={usage.status === "rejected" ? messageOf(usage.reason) : null}
+          nowMs={nowMs}
+          degraded={degraded}
+        />
       </div>
     </>
   );
