@@ -68,5 +68,6 @@ export const authApi = {
   start: (email: string) => backendFetch<void>("/auth/email/start", { method: "POST", body: { email } }),
   verify: (email: string, code: string) =>
     backendFetch<{ token: string }>("/auth/email/verify", { method: "POST", body: { email, code } }),
+  google: (idToken: string) => backendFetch<{ token: string }>("/auth/google", { method: "POST", body: { idToken } }),
   logout: (token: string) => backendFetch<void>("/auth/logout", { method: "POST", token }),
 };

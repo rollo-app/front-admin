@@ -37,18 +37,41 @@ export async function verifyLogin(prev: LoginState, form: FormData): Promise<Log
   } catch (e) {
     return { step: "code", email, error: messageOf(e) };
   }
+  return enterIfSuperadmin(token, (error) => ({ step: "code", email, error }));
+}
+
+const GOOGLE_FAILED = "No se pudo entrar con Google. Probá de nuevo.";
+
+/** Google Identity Services hands the browser an ID token (`credential`); the backend checks it and opens a session. */
+export async function googleLogin(_prev: LoginState, form: FormData): Promise<LoginState> {
+  const credential = String(form.get("credential") ?? "");
+  if (!credential) return { step: "email", error: GOOGLE_FAILED };
+  let token: string;
+  try {
+    token = (await authApi.google(credential)).token;
+  } catch (e) {
+    return { step: "email", error: messageOf(e) };
+  }
+  return enterIfSuperadmin(token, (error) => ({ step: "email", error }));
+}
+
+/**
+ * Only a superadmin gets the cookie: anyone else's fresh session is closed right away. Redirects into the panel on
+ * success; otherwise returns the state `fail` builds with the message.
+ */
+async function enterIfSuperadmin(token: string, fail: (error: string) => LoginState): Promise<LoginState> {
   let isSuperadmin = false;
   try {
     isSuperadmin = (await adminApi.me(token)).appRole === "superadmin";
   } catch (e) {
     if (!(e instanceof NoAccessError)) {
       await safeLogout(token);
-      return { step: "code", email, error: messageOf(e) };
+      return fail(messageOf(e));
     }
   }
   if (!isSuperadmin) {
     await safeLogout(token);
-    return { step: "code", email, error: NO_ACCESS };
+    return fail(NO_ACCESS);
   }
   await setSessionCookie(token);
   redirect("/");
