@@ -34,7 +34,7 @@ describe("setDegradedMode", () => {
 
 describe("setRegistrationsOpen", () => {
   it("passes the flag, revalidates and returns the state", async () => {
-    const state = { open: false, updatedAt: 1, updatedBy: "su@rollo.test" };
+    const state = { open: false, updatedAt: 1, updatedBy: { id: "1", email: "su@rollo.test" } };
     vi.mocked(adminApi.setRegistrations).mockResolvedValue(state);
     await expect(setRegistrationsOpen(false)).resolves.toEqual({ ok: true, state });
     expect(adminApi.setRegistrations).toHaveBeenCalledWith("tok", false);

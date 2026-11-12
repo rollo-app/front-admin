@@ -72,7 +72,7 @@ describe("adminApi registrations and waitlist", () => {
     expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/registrations");
   });
   it("PUTs { open }", async () => {
-    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: false, updatedAt: 1, updatedBy: "su@rollo.test" }));
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: false, updatedAt: 1, updatedBy: { id: "1", email: "su@rollo.test" } }));
     await adminApi.setRegistrations("t", false);
     const [url, init] = f.mock.calls[0];
     expect(url).toBe("http://backend.test/admin/registrations");

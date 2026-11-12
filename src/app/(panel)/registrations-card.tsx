@@ -76,12 +76,10 @@ export function RegistrationsCard({ state }: { state: Registrations }) {
           ) : null}
         </div>
       </CardHeader>
-      {state.updatedAt !== null ? (
+      {state.updatedAt !== null && state.updatedBy ? (
         <CardContent>
           <p className="text-xs text-muted-foreground">
-            {state.updatedBy
-              ? `cambiado por ${state.updatedBy} el ${formatDateTime(state.updatedAt)}`
-              : `cambiado el ${formatDateTime(state.updatedAt)}`}
+            {`cambiado por ${state.updatedBy.email} el ${formatDateTime(state.updatedAt)}`}
           </p>
         </CardContent>
       ) : null}

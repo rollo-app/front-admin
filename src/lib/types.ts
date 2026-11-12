@@ -85,7 +85,7 @@ export type DegradedMode = {
   updatedBy: { id: string; email: string } | null;
 };
 
-export type Registrations = { open: boolean; updatedAt: number | null; updatedBy: string | null };
+export type Registrations = { open: boolean; updatedAt: number | null; updatedBy: { id: string; email: string } | null };
 
 export type WaitlistStatus = "confirmed" | "pending" | "unsubscribed";
 

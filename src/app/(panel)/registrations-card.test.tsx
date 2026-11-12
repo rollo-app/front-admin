@@ -8,7 +8,7 @@ import { setRegistrationsOpen } from "./dashboard.actions";
 import { RegistrationsCard } from "./registrations-card";
 
 const open = { open: true, updatedAt: null, updatedBy: null };
-const closed = { open: false, updatedAt: Date.UTC(2026, 9, 28, 15, 5), updatedBy: "su@rollo.test" };
+const closed = { open: false, updatedAt: Date.UTC(2026, 9, 28, 15, 5), updatedBy: { id: "1", email: "su@rollo.test" } };
 beforeEach(() => vi.clearAllMocks());
 
 describe("RegistrationsCard", () => {
@@ -17,6 +17,10 @@ describe("RegistrationsCard", () => {
     expect(screen.getByText("Registros cerrados")).toBeInTheDocument();
     expect(screen.getByText(/hasta 1 minuto/)).toBeInTheDocument();
     expect(screen.getByText("cambiado por su@rollo.test el 28/10/2026 12:05")).toBeInTheDocument();
+  });
+  it("renders nothing about the author when updatedBy is null", () => {
+    render(<RegistrationsCard state={{ open: true, updatedAt: 1, updatedBy: null }} />);
+    expect(screen.queryByText(/cambiado/)).not.toBeInTheDocument();
   });
   it("shows no author line when never changed", () => {
     render(<RegistrationsCard state={open} />);
