@@ -41,6 +41,10 @@ export type AdminTrip = {
   activeMembers: number;
   maxMembers: number;
   mediaCount: number;
+  keepOriginals: boolean;
+  /** reveal + 30 days when originals are not kept; null otherwise. */
+  originalsExpireAt: number | null;
+  originalsPurgedAt: number | null;
 };
 
 export type AdminTripMember = {

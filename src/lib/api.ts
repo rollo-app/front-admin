@@ -66,8 +66,9 @@ export const adminApi = {
     backendFetch<Page<AdminTrip>>(`/admin/trips?${query}`, { token }),
   trip: (token: string | null, id: string) =>
     backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { token }),
-  setTripCap: (token: string | null, id: string, maxMembers: number) =>
-    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { method: "PATCH", body: { maxMembers }, token }),
+  updateTrip: (token: string | null, id: string, patch: { maxMembers?: number; keepOriginals?: boolean }) =>
+    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { method: "PATCH", body: patch, token }),
+  setTripCap: (token: string | null, id: string, maxMembers: number) => adminApi.updateTrip(token, id, { maxMembers }),
 };
 
 export const authApi = {

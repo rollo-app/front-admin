@@ -7,7 +7,7 @@ import RollosPage from "./page";
 
 const item = {
   id: "t1", name: "Playa", joinCode: "ABC123", createdAt: 1, startsAt: 1, endsAt: 2, revealAt: 3, revealed: false,
-  stage: "active" as const, creator: null, activeMembers: 3, maxMembers: 10, mediaCount: 4,
+  stage: "active" as const, creator: null, activeMembers: 3, maxMembers: 10, mediaCount: 4, keepOriginals: false, originalsExpireAt: null, originalsPurgedAt: null,
 };
 const run = async (sp: Record<string, string | undefined>) => render(await RollosPage({ searchParams: Promise.resolve(sp) }));
 
