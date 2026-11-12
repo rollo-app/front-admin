@@ -12,7 +12,7 @@ El browser nunca habla con el backend. Todo pasa por el servidor de Next:
 - `requireSession()` (`src/lib/auth.ts`, cacheado por render) protege el layout `(panel)`.
 - `src/proxy.ts` solo chequea que exista la cookie; la validación real es `requireSession()`.
 - `/logout` revalida contra el backend antes de borrar la cookie.
-- Login: `src/app/login/` (código por mail, mismo flujo que la app, o **"Continuar con Google"**: el botón oficial de Google Identity Services le da al browser un ID token y la acción `googleLogin` lo manda a `POST /auth/google`; client web `GOOGLE_WEB_CLIENT_ID` en `src/lib/google.ts`). Para que el botón ande, el origen del panel tiene que estar en *Authorized JavaScript origins* del client web "Rollo backend" (Google Cloud, proyecto `rollo-514415`): hoy `https://front-admin-coral.vercel.app` y `http://localhost:3000`. En los previews de Vercel (URL al azar) el botón no anda; el código por mail sí.
+- Login: `src/app/login/` (código por mail, mismo flujo que la app, o **"Continuar con Google"**: el botón oficial de Google Identity Services le da al browser un ID token y la acción `googleLogin` lo manda a `POST /auth/google`; client web `GOOGLE_WEB_CLIENT_ID` en `src/lib/google.ts`). Para que el botón ande, el origen del panel tiene que estar en *Authorized JavaScript origins* del client web "Rollo backend" (Google Cloud, proyecto `rollo-514415`): hoy `https://admin.rolloproject.com` (el dominio del panel), `https://front-admin-coral.vercel.app` y `http://localhost:3000`. En los previews de Vercel (URL al azar) el botón no anda; el código por mail sí.
 
 ## Variables de entorno
 
