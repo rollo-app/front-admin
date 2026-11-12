@@ -56,6 +56,14 @@ describe("adminApi trips", () => {
     expect(init!.method).toBe("PATCH");
     expect(init!.body).toBe(JSON.stringify({ maxMembers: 20 }));
   });
+  it("updateTrip PATCHes only the given fields", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { id: "x" }));
+    await adminApi.updateTrip("t", "x", { keepOriginals: true });
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("http://backend.test/admin/trips/x");
+    expect(init!.method).toBe("PATCH");
+    expect(init!.body).toBe(JSON.stringify({ keepOriginals: true }));
+  });
   it("surfaces the backend 400 message and maps an unknown trip to NoAccessError", async () => {
     vi.spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(json(400, { error: "El cupo no puede ser menor a los participantes activos" }))

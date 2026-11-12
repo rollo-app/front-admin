@@ -7,6 +7,7 @@ const base: AdminTrip = {
   id: "t1", name: "Playa", joinCode: "ABC123", createdAt: Date.UTC(2026, 9, 27, 15), startsAt: 1, endsAt: 2, revealAt: 3,
   revealed: false, stage: "active", creator: { id: "u1", name: "Ana", username: "ana" },
   activeMembers: 12, maxMembers: 15, mediaCount: 1284,
+  keepOriginals: false, originalsExpireAt: null, originalsPurgedAt: null,
 };
 const cell = (header: string, t: AdminTrip = base) => {
   const col = tripColumns.find((c) => c.header === header)!;

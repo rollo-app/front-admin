@@ -11,6 +11,7 @@ import { formatDate, formatDateTime, formatInt } from "@/lib/format";
 import type { AdminTripDetail } from "@/lib/types";
 import { StageBadge } from "../stage-badge";
 import { CapForm } from "./cap-form";
+import { OriginalsForm } from "./originals-form";
 
 export default async function TripDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -74,6 +75,18 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
         <CardHeader><CardTitle>Cupo de participantes</CardTitle></CardHeader>
         <CardContent>
           <CapForm key={trip.maxMembers} tripId={trip.id} activeMembers={trip.activeMembers} maxMembers={trip.maxMembers} />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle>Fotos originales</CardTitle></CardHeader>
+        <CardContent>
+          <OriginalsForm
+            key={String(trip.keepOriginals)}
+            tripId={trip.id}
+            keepOriginals={trip.keepOriginals}
+            originalsExpireAt={trip.originalsExpireAt}
+            originalsPurgedAt={trip.originalsPurgedAt}
+          />
         </CardContent>
       </Card>
       <Card>

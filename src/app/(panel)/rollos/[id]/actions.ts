@@ -9,9 +9,21 @@ import type { AdminTripDetail } from "@/lib/types";
 export type UpdateTripCapResult = { ok: true; trip: AdminTripDetail } | { ok: false; error: string };
 
 export async function updateTripCap(id: string, maxMembers: number): Promise<UpdateTripCapResult> {
+  return runTripUpdate("updateTripCap", id, (token) => adminApi.setTripCap(token, id, maxMembers));
+}
+
+export async function updateTripOriginals(id: string, keepOriginals: boolean): Promise<UpdateTripCapResult> {
+  return runTripUpdate("updateTripOriginals", id, (token) => adminApi.updateTrip(token, id, { keepOriginals }));
+}
+
+async function runTripUpdate(
+  label: string,
+  id: string,
+  call: (token: string | null) => Promise<AdminTripDetail>,
+): Promise<UpdateTripCapResult> {
   const token = await getSessionToken();
   try {
-    const trip = await adminApi.setTripCap(token, id, maxMembers);
+    const trip = await call(token);
     revalidatePath(`/rollos/${id}`);
     revalidatePath("/rollos");
     return { ok: true, trip };
@@ -19,7 +31,7 @@ export async function updateTripCap(id: string, maxMembers: number): Promise<Upd
     // NoAccessError extends ApiError: it is handled below, not as an inline error.
     if (!(e instanceof NoAccessError)) {
       if (e instanceof ApiError) return { ok: false, error: e.message };
-      console.error("updateTripCap failed", e);
+      console.error(`${label} failed`, e);
       return { ok: false, error: "No se pudo guardar, probá de nuevo." };
     }
   }
@@ -29,7 +41,7 @@ export async function updateTripCap(id: string, maxMembers: number): Promise<Upd
     return { ok: false, error: "Ese rollo ya no existe." };
   } catch (e) {
     if (!(e instanceof ApiError)) {
-      console.error("updateTripCap session check failed", e);
+      console.error(`${label} session check failed`, e);
       return { ok: false, error: "No se pudo guardar, probá de nuevo." };
     }
   }

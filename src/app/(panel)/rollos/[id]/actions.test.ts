@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("next/navigation", () => ({ redirect: vi.fn((to: string) => { throw new Error(`REDIRECT:${to}`); }) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/session", () => ({ getSessionToken: vi.fn(), clearSessionCookie: vi.fn() }));
-vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), adminApi: { setTripCap: vi.fn(), me: vi.fn() } }));
+vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), adminApi: { setTripCap: vi.fn(), updateTrip: vi.fn(), me: vi.fn() } }));
 import { revalidatePath } from "next/cache";
 import { ApiError, NoAccessError, adminApi } from "@/lib/api";
 import { clearSessionCookie, getSessionToken } from "@/lib/session";
 import type { AdminTripDetail } from "@/lib/types";
-import { updateTripCap } from "./actions";
+import { updateTripCap, updateTripOriginals } from "./actions";
 
 const trip = { id: "t1", maxMembers: 20 } as AdminTripDetail;
 
@@ -44,6 +44,26 @@ describe("updateTripCap", () => {
     vi.mocked(adminApi.setTripCap).mockRejectedValue(new NoAccessError("No encontrado"));
     vi.mocked(adminApi.me).mockRejectedValue(new NoAccessError("No encontrado"));
     await expect(updateTripCap("t1", 5)).rejects.toThrow("REDIRECT:/login");
+    expect(clearSessionCookie).toHaveBeenCalled();
+  });
+});
+
+describe("updateTripOriginals", () => {
+  it("sends keepOriginals, revalidates and returns the trip", async () => {
+    vi.mocked(adminApi.updateTrip).mockResolvedValue(trip);
+    await expect(updateTripOriginals("t1", true)).resolves.toEqual({ ok: true, trip });
+    expect(adminApi.updateTrip).toHaveBeenCalledWith("tok", "t1", { keepOriginals: true });
+    expect(revalidatePath).toHaveBeenCalledWith("/rollos/t1");
+    expect(revalidatePath).toHaveBeenCalledWith("/rollos");
+  });
+  it("returns the backend message inline", async () => {
+    vi.mocked(adminApi.updateTrip).mockRejectedValue(new ApiError(400, "Inválido"));
+    await expect(updateTripOriginals("t1", false)).resolves.toEqual({ ok: false, error: "Inválido" });
+  });
+  it("clears the cookie and redirects to /login when the session is gone", async () => {
+    vi.mocked(adminApi.updateTrip).mockRejectedValue(new NoAccessError("No encontrado"));
+    vi.mocked(adminApi.me).mockRejectedValue(new NoAccessError("No encontrado"));
+    await expect(updateTripOriginals("t1", true)).rejects.toThrow("REDIRECT:/login");
     expect(clearSessionCookie).toHaveBeenCalled();
   });
 });
