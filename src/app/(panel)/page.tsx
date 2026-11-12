@@ -11,6 +11,7 @@ import { formatBytes, formatUtcDay, relativeMinutes } from "@/lib/format";
 import type { DegradedMode, Metric, MetricsResponse, UsageMetric, UsageResponse } from "@/lib/types";
 import { DegradedNote } from "./degraded-note";
 import { DegradedSwitch } from "./degraded-switch";
+import { RegistrationsCard } from "./registrations-card";
 
 const USAGE_METERS: { key: UsageMetric; label: string }[] = [
   { key: "workers_requests", label: "Requests" },
@@ -109,17 +110,18 @@ function Usage({ u, usageError, nowMs, degraded }: { u: UsageResponse | null; us
 }
 
 async function loadDashboard(token: string | null) {
-  const [metrics, usage, degraded] = await Promise.allSettled([
+  const [metrics, usage, degraded, registrations] = await Promise.allSettled([
     adminApi.metrics(token, 30),
     adminApi.usage(token),
     adminApi.degraded(token),
+    adminApi.registrations(token),
   ]);
-  return { metrics, usage, degraded, nowMs: Date.now() };
+  return { metrics, usage, degraded, registrations, nowMs: Date.now() };
 }
 
 export default async function DashboardPage() {
   const { token } = await requireSession();
-  const { metrics, usage, degraded, nowMs } = await loadDashboard(token);
+  const { metrics, usage, degraded, registrations, nowMs } = await loadDashboard(token);
 
   const m = metrics.status === "fulfilled" ? metrics.value : null;
   const subtitle = m?.latestDay ? `al cierre del ${formatUtcDay(m.latestDay)}` : undefined;
@@ -139,6 +141,17 @@ export default async function DashboardPage() {
               <ChartCard title="Últimos 30 días" series={metrics.value.series as { day: string; values: Record<string, number> }[]} keys={CHART_KEYS} />
             )}
           </>
+        )}
+        {registrations.status === "fulfilled" ? (
+          <RegistrationsCard state={registrations.value} />
+        ) : (
+          <Card>
+            <CardContent>
+              <p role="alert" className="text-xs text-destructive-text">
+                No pudimos leer el estado de los registros: {messageOf(registrations.reason)}
+              </p>
+            </CardContent>
+          </Card>
         )}
         <Usage
           u={usage.status === "fulfilled" ? usage.value : null}

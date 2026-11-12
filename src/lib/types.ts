@@ -88,3 +88,18 @@ export type DegradedMode = {
   updatedAt: number | null;
   updatedBy: { id: string; email: string } | null;
 };
+
+export type Registrations = { open: boolean; updatedAt: number | null; updatedBy: { id: string; email: string } | null };
+
+export type WaitlistStatus = "confirmed" | "pending" | "unsubscribed";
+
+export type WaitlistEntry = {
+  email: string;
+  source: "app" | "web";
+  status: WaitlistStatus;
+  createdAt: number;
+  confirmedAt: number | null;
+  unsubscribedAt: number | null;
+};
+
+export type WaitlistPage = Page<WaitlistEntry> & { totals: { all: number } & Record<WaitlistStatus, number> };
