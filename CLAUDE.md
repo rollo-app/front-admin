@@ -9,7 +9,7 @@ Next 16.4 (App Router, `cacheComponents`, `src/proxy.ts` en vez de middleware), 
 `npm run dev` · `npm test` · `npm run build` · `npm run lint`
 
 ## Regla BFF
-El browser nunca habla con el backend. Solo `src/lib/api.ts` (server) llama al backend con el token de la cookie httpOnly `rollo_admin_session` (`session.ts`, constantes en `session-constants.ts`). `requireSession()` (`auth.ts`, cacheado por render) protege `(panel)`. `/logout` revalida antes de borrar la cookie. Única env: `BACKEND_URL` (server-only).
+El browser nunca habla con el backend (el login con Google habla con Google: el ID token va a la acción `googleLogin`, que llama a `POST /auth/google`). Solo `src/lib/api.ts` (server) llama al backend con el token de la cookie httpOnly `rollo_admin_session` (`session.ts`, constantes en `session-constants.ts`). `requireSession()` (`auth.ts`, cacheado por render) protege `(panel)`. `/logout` revalida antes de borrar la cookie. Única env: `BACKEND_URL` (server-only).
 
 ## Tema
 Tokens en `src/app/globals.css` (hex, dark por `prefers-color-scheme`). El `--primary` cobalto es solo para acciones. Nada de colores o tamaños fuera de los tokens.

@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 vi.mock("./actions", () => ({
   startLogin: vi.fn(async (_p: unknown, f: FormData) => ({ step: "code", email: String(f.get("email")) })),
   verifyLogin: vi.fn(async (p: { email?: string }) => ({ step: "code", email: p.email })),
+  googleLogin: vi.fn(async () => ({ step: "email" })),
 }));
 import { verifyLogin } from "./actions";
 import { LoginForm } from "./login-form";
@@ -12,6 +13,12 @@ import { LoginForm } from "./login-form";
 beforeEach(() => vi.clearAllMocks());
 
 describe("LoginForm", () => {
+  it("offers Google next to the email code on the first step", () => {
+    render(<LoginForm />);
+    expect(screen.getByRole("button", { name: "Mandame el código" })).toBeInTheDocument();
+    expect(screen.getByTestId("google-button")).toBeInTheDocument();
+  });
+
   it("verifies against the new email after Usar otro email", async () => {
     const user = userEvent.setup();
     render(<LoginForm />);
