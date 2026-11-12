@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { startLogin, verifyLogin, type LoginState } from "./actions";
+import { GoogleButton } from "./google-button";
 
 function FormError({ message }: { message?: string }) {
   return message ? (
@@ -46,15 +47,21 @@ export function LoginForm() {
     return <CodeForm key={state.email} email={state.email} onBack={() => setBack(true)} />;
   }
   return (
-    <form action={action} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Email</Label>
-        <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required autoFocus />
+    <div className="flex flex-col gap-4">
+      <form action={action} className="flex flex-col gap-4">
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="email">Email</Label>
+          <Input id="email" name="email" type="email" autoComplete="email" defaultValue={state.email} required autoFocus />
+        </div>
+        <FormError message={state.error} />
+        <Button type="submit" disabled={pending}>
+          Mandame el código
+        </Button>
+      </form>
+      <div className="flex items-center gap-3 text-xs text-muted-foreground" aria-hidden>
+        <span className="h-px flex-1 bg-border" />o<span className="h-px flex-1 bg-border" />
       </div>
-      <FormError message={state.error} />
-      <Button type="submit" disabled={pending}>
-        Mandame el código
-      </Button>
-    </form>
+      <GoogleButton />
+    </div>
   );
 }
