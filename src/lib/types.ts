@@ -25,6 +25,36 @@ export type AdminUser = {
   mediaCount: number;
 };
 
+export type Stage = "upcoming" | "active" | "ended" | "revealed";
+
+export type AdminTrip = {
+  id: string;
+  name: string;
+  joinCode: string;
+  createdAt: number;
+  startsAt: number;
+  endsAt: number;
+  revealAt: number;
+  revealed: boolean;
+  stage: Stage;
+  creator: { id: string; name: string | null; username: string | null } | null;
+  activeMembers: number;
+  maxMembers: number;
+  mediaCount: number;
+};
+
+export type AdminTripMember = {
+  id: string;
+  userId: string;
+  name: string | null;
+  username: string | null;
+  role: "admin" | "member";
+  isCreator: boolean;
+  joinedAt: number;
+};
+
+export type AdminTripDetail = AdminTrip & { members: AdminTripMember[] };
+
 export type Badge = "founder" | "first_edition";
 
 export type AdminUserDetail = AdminUser & {

@@ -1,5 +1,5 @@
 import "server-only";
-import type { AdminMe, AdminUser, AdminUserDetail, Badge, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
+import type { AdminMe, AdminTrip, AdminTripDetail, AdminUser, AdminUserDetail, Badge, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
 
 export class ApiError extends Error {
   constructor(readonly status: number, message: string) {
@@ -62,6 +62,12 @@ export const adminApi = {
     backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { token }),
   editUser: (token: string | null, id: string, patch: UserPatch) =>
     backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { method: "PATCH", body: patch, token }),
+  trips: (token: string | null, query: URLSearchParams) =>
+    backendFetch<Page<AdminTrip>>(`/admin/trips?${query}`, { token }),
+  trip: (token: string | null, id: string) =>
+    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { token }),
+  setTripCap: (token: string | null, id: string, maxMembers: number) =>
+    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { method: "PATCH", body: { maxMembers }, token }),
 };
 
 export const authApi = {
