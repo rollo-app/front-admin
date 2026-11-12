@@ -64,3 +64,38 @@ describe("adminApi trips", () => {
     await expect(adminApi.trip("t", "nope")).rejects.toBeInstanceOf(NoAccessError);
   });
 });
+
+describe("adminApi registrations and waitlist", () => {
+  it("reads registrations", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: true, updatedAt: null, updatedBy: null }));
+    await expect(adminApi.registrations("t")).resolves.toEqual({ open: true, updatedAt: null, updatedBy: null });
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/registrations");
+  });
+  it("PUTs { open }", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: false, updatedAt: 1, updatedBy: "su@rollo.test" }));
+    await adminApi.setRegistrations("t", false);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("http://backend.test/admin/registrations");
+    expect(init!.method).toBe("PUT");
+    expect(init!.body).toBe(JSON.stringify({ open: false }));
+  });
+  it("lists the waitlist with the query string", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { items: [] }));
+    await adminApi.waitlist("t", new URLSearchParams({ page: "2", status: "pending" }));
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/waitlist?page=2&status=pending");
+  });
+  it("fetches the CSV raw, with the bearer token", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("email\n", { status: 200, headers: { "content-type": "text/csv" } }));
+    const res = await adminApi.waitlistCsv("t");
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/waitlist.csv");
+    expect(new Headers(f.mock.calls[0][1]!.headers).get("authorization")).toBe("Bearer t");
+    expect(await res.text()).toBe("email\n");
+  });
+  it("maps CSV failures: 404 to NoAccessError, others to ApiError", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(json(404, { error: "No encontrado" }))
+      .mockResolvedValueOnce(json(500, { error: "Roto" }));
+    await expect(adminApi.waitlistCsv("t")).rejects.toBeInstanceOf(NoAccessError);
+    await expect(adminApi.waitlistCsv("t")).rejects.toMatchObject({ status: 500, message: "Roto" });
+  });
+});

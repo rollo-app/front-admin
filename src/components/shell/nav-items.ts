@@ -1,4 +1,4 @@
-import { Film, Flag, Image, LayoutDashboard, Users, type LucideIcon } from "lucide-react";
+import { Film, Flag, Image, LayoutDashboard, MailCheck, Users, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; soon?: boolean };
 
@@ -6,6 +6,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/users", label: "Usuarios", icon: Users },
   { href: "/rollos", label: "Rollos", icon: Film },
+  { href: "/waitlist", label: "Lista de espera", icon: MailCheck },
   { href: "/photos", label: "Fotos", icon: Image, soon: true },
   { href: "/reports", label: "Denuncias", icon: Flag, soon: true },
 ];

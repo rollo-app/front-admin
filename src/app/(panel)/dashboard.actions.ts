@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { ApiError, NoAccessError, adminApi } from "@/lib/api";
 import { clearSessionCookie, getSessionToken } from "@/lib/session";
-import type { DegradedMode } from "@/lib/types";
+import type { DegradedMode, Registrations } from "@/lib/types";
 
 export async function setDegradedMode(
   on: boolean,
@@ -22,6 +22,24 @@ export async function setDegradedMode(
     }
   }
   // Session no longer valid: drop the cookie and go to login (redirect throws, so keep it outside try/catch).
+  await clearSessionCookie();
+  redirect("/login");
+}
+
+export async function setRegistrationsOpen(
+  open: boolean,
+): Promise<{ ok: true; state: Registrations } | { ok: false; error: string }> {
+  const token = await getSessionToken();
+  try {
+    const state = await adminApi.setRegistrations(token, open);
+    revalidatePath("/");
+    return { ok: true, state };
+  } catch (e) {
+    if (!(e instanceof NoAccessError)) {
+      if (e instanceof ApiError) return { ok: false, error: e.message };
+      throw e;
+    }
+  }
   await clearSessionCookie();
   redirect("/login");
 }

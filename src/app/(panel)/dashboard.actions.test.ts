@@ -2,11 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("next/navigation", () => ({ redirect: vi.fn((to: string) => { throw new Error(`REDIRECT:${to}`); }) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/session", () => ({ getSessionToken: vi.fn(), clearSessionCookie: vi.fn() }));
-vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), adminApi: { setDegraded: vi.fn() } }));
+vi.mock("@/lib/api", async (orig) => ({ ...(await orig<typeof import("@/lib/api")>()), adminApi: { setDegraded: vi.fn(), setRegistrations: vi.fn() } }));
 import { revalidatePath } from "next/cache";
 import { ApiError, NoAccessError, adminApi } from "@/lib/api";
 import { clearSessionCookie, getSessionToken } from "@/lib/session";
-import { setDegradedMode } from "./dashboard.actions";
+import { setDegradedMode, setRegistrationsOpen } from "./dashboard.actions";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -29,5 +29,29 @@ describe("setDegradedMode", () => {
     vi.mocked(adminApi.setDegraded).mockResolvedValue(state);
     await expect(setDegradedMode(true)).resolves.toEqual({ ok: true, state });
     expect(revalidatePath).toHaveBeenCalledWith("/");
+  });
+});
+
+describe("setRegistrationsOpen", () => {
+  it("passes the flag, revalidates and returns the state", async () => {
+    const state = { open: false, updatedAt: 1, updatedBy: "su@rollo.test" };
+    vi.mocked(adminApi.setRegistrations).mockResolvedValue(state);
+    await expect(setRegistrationsOpen(false)).resolves.toEqual({ ok: true, state });
+    expect(adminApi.setRegistrations).toHaveBeenCalledWith("tok", false);
+    expect(revalidatePath).toHaveBeenCalledWith("/");
+  });
+  it("returns the backend error for ApiErrors (400)", async () => {
+    vi.mocked(adminApi.setRegistrations).mockRejectedValue(new ApiError(400, "Body inválido"));
+    await expect(setRegistrationsOpen(true)).resolves.toEqual({ ok: false, error: "Body inválido" });
+    expect(clearSessionCookie).not.toHaveBeenCalled();
+  });
+  it("clears the cookie and redirects to /login on NoAccessError", async () => {
+    vi.mocked(adminApi.setRegistrations).mockRejectedValue(new NoAccessError("No encontrado"));
+    await expect(setRegistrationsOpen(true)).rejects.toThrow("REDIRECT:/login");
+    expect(clearSessionCookie).toHaveBeenCalled();
+  });
+  it("rethrows unexpected errors", async () => {
+    vi.mocked(adminApi.setRegistrations).mockRejectedValue(new Error("boom"));
+    await expect(setRegistrationsOpen(true)).rejects.toThrow("boom");
   });
 });

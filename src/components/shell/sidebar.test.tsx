@@ -24,6 +24,11 @@ function renderSidebar(currentPath: string, email = "su@rollo.test") {
 }
 
 describe("Sidebar", () => {
+  it("links to the waitlist", () => {
+    renderSidebar("/waitlist");
+    expect(screen.getByRole("link", { name: "Lista de espera" })).toHaveAttribute("href", "/waitlist");
+    expect(screen.getByRole("link", { name: "Lista de espera" })).toHaveAttribute("aria-current", "page");
+  });
   it("marks the current section, disables the coming-soon ones and shows the email", () => {
     renderSidebar("/users");
     expect(screen.getByRole("link", { name: "Usuarios" })).toHaveAttribute("aria-current", "page");
@@ -46,6 +51,7 @@ describe("nav helpers", () => {
     renderSidebar("/rollos/abc");
     expect(screen.getByRole("link", { name: "Rollos" })).toHaveAttribute("aria-current", "page");
     expect(titleFor("/rollos")).toBe("Rollos");
+    expect(titleFor("/waitlist")).toBe("Lista de espera");
     expect(titleFor("/rollos/abc")).toBe("Rollo");
   });
   it("matches path boundaries", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPageHref, parsePageParams } from "./page-params";
+import { buildPageHref, parsePageParams, toBackendQuery } from "./page-params";
 
 describe("page params", () => {
   it("parses with defaults and clamps page size to the allowed set", () => {
@@ -11,5 +11,14 @@ describe("page params", () => {
     expect(buildPageHref("/users", cur, { page: 4 })).toBe("/users?page=4&pageSize=50&sort=createdAt&order=desc&q=ana");
     expect(buildPageHref("/users", cur, { q: "beto" })).toBe("/users?page=1&pageSize=50&sort=createdAt&order=desc&q=beto");
     expect(buildPageHref("/users", cur, { sort: "name", order: "asc" })).toBe("/users?page=1&pageSize=50&sort=name&order=asc&q=ana");
+  });
+  it("parses, keeps and forwards the filters it was told about", () => {
+    const p = parsePageParams({ status: "pending", other: "x" }, { filters: ["status"] });
+    expect(p).toEqual({ page: 1, pageSize: 25, order: "desc", filters: { status: "pending" } });
+    expect(parsePageParams({ status: "pending" })).toEqual({ page: 1, pageSize: 25, order: "desc" });
+    expect(buildPageHref("/waitlist", { ...p, page: 3 }, { page: 4 })).toBe("/waitlist?page=4&pageSize=25&order=desc&status=pending");
+    expect(buildPageHref("/waitlist", { ...p, page: 3 }, { filters: {} })).toBe("/waitlist?page=1&pageSize=25&order=desc");
+    expect(buildPageHref("/waitlist", { ...p, page: 3 }, { filters: { status: "confirmed" } })).toBe("/waitlist?page=1&pageSize=25&order=desc&status=confirmed");
+    expect(Object.fromEntries(toBackendQuery(p))).toEqual({ page: "1", pageSize: "25", order: "desc", status: "pending" });
   });
 });
