@@ -96,7 +96,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
                       {m.username ? <span className="ml-1 text-muted-foreground">@{m.username}</span> : null}
                     </TableCell>
                     <TableCell>
-                      {m.isCreator ? <Badge>Creador</Badge> : m.role === "admin" ? <Badge variant="secondary">Admin</Badge> : "Miembro"}
+                      {m.isCreator ? <Badge variant="secondary">Creador</Badge> : m.role === "admin" ? <Badge variant="secondary">Admin</Badge> : "Miembro"}
                     </TableCell>
                     <TableCell>{formatDate(m.joinedAt)}</TableCell>
                   </TableRow>

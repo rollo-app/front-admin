@@ -3,5 +3,6 @@ import { STAGE_LABEL } from "@/lib/stages";
 import type { Stage } from "@/lib/types";
 
 export function StageBadge({ stage }: { stage: Stage }) {
-  return <Badge variant={stage === "active" ? "default" : "secondary"}>{STAGE_LABEL[stage]}</Badge>;
+  // Neutral like every badge in the panel: the cobalt primary is only for actions.
+  return <Badge variant="secondary">{STAGE_LABEL[stage]}</Badge>;
 }
