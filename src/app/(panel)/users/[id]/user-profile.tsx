@@ -40,6 +40,7 @@ export function UserProfile({
     ["Descripción", user.bio ?? "—"],
     ["Badge", user.badge ? BADGE_LABEL[user.badge] : "—"],
     ["Rollos ilimitados", user.unlimitedRollos ? "sí" : "no"],
+    ["Puede crear eventos", user.canCreateEvents ? "sí" : "no"],
     ["Rol", user.appRole === "superadmin" ? <Badge variant="secondary">superadmin</Badge> : "usuario"],
     ["Rollos", formatInt(user.tripCount)],
     ["Fotos", formatInt(user.mediaCount)],

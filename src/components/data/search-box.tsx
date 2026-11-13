@@ -9,6 +9,9 @@ export function SearchBox({ params, placeholder }: { params: PageParams; placeho
       <input type="hidden" name="pageSize" value={params.pageSize} />
       {params.sort ? <input type="hidden" name="sort" value={params.sort} /> : null}
       <input type="hidden" name="order" value={params.order} />
+      {Object.entries(params.filters ?? {}).map(([k, v]) => (
+        <input key={k} type="hidden" name={k} value={v} />
+      ))}
       <Input type="search" name="q" defaultValue={params.q ?? ""} placeholder={placeholder} aria-label={placeholder} className="w-64" />
       <Button type="submit" variant="outline">Buscar</Button>
     </form>

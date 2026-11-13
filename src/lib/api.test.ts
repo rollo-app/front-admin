@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import { ApiError, NoAccessError, backendFetch } from "./api";
+import { ApiError, NoAccessError, adminApi, backendFetch } from "./api";
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 afterEach(() => vi.restoreAllMocks());
@@ -33,5 +33,77 @@ describe("backendFetch", () => {
   it("returns undefined on 204", async () => {
     vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(null, { status: 204 }));
     await expect(backendFetch("/auth/logout", { method: "POST" })).resolves.toBeUndefined();
+  });
+});
+
+describe("adminApi trips", () => {
+  it("lists trips with the query string under /admin/trips", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { items: [], page: 1, pageSize: 25, total: 0 }));
+    await adminApi.trips("t", new URLSearchParams({ page: "2", sort: "mediaCount", q: "pla" }));
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/trips?page=2&sort=mediaCount&q=pla");
+    expect(new Headers(f.mock.calls[0][1]!.headers).get("authorization")).toBe("Bearer t");
+  });
+  it("fetches one trip by encoded id", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { id: "a/b" }));
+    await adminApi.trip("t", "a/b");
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/trips/a%2Fb");
+  });
+  it("PATCHes maxMembers", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { id: "x" }));
+    await adminApi.setTripCap("t", "x", 20);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("http://backend.test/admin/trips/x");
+    expect(init!.method).toBe("PATCH");
+    expect(init!.body).toBe(JSON.stringify({ maxMembers: 20 }));
+  });
+  it("updateTrip PATCHes only the given fields", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { id: "x" }));
+    await adminApi.updateTrip("t", "x", { keepOriginals: true });
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("http://backend.test/admin/trips/x");
+    expect(init!.method).toBe("PATCH");
+    expect(init!.body).toBe(JSON.stringify({ keepOriginals: true }));
+  });
+  it("surfaces the backend 400 message and maps an unknown trip to NoAccessError", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(json(400, { error: "El cupo no puede ser menor a los participantes activos" }))
+      .mockResolvedValueOnce(json(404, { error: "No encontrado" }));
+    await expect(adminApi.setTripCap("t", "x", 1)).rejects.toMatchObject({ status: 400, message: "El cupo no puede ser menor a los participantes activos" });
+    await expect(adminApi.trip("t", "nope")).rejects.toBeInstanceOf(NoAccessError);
+  });
+});
+
+describe("adminApi registrations and waitlist", () => {
+  it("reads registrations", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: true, updatedAt: null, updatedBy: null }));
+    await expect(adminApi.registrations("t")).resolves.toEqual({ open: true, updatedAt: null, updatedBy: null });
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/registrations");
+  });
+  it("PUTs { open }", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { open: false, updatedAt: 1, updatedBy: { id: "1", email: "su@rollo.test" } }));
+    await adminApi.setRegistrations("t", false);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("http://backend.test/admin/registrations");
+    expect(init!.method).toBe("PUT");
+    expect(init!.body).toBe(JSON.stringify({ open: false }));
+  });
+  it("lists the waitlist with the query string", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(json(200, { items: [] }));
+    await adminApi.waitlist("t", new URLSearchParams({ page: "2", status: "pending" }));
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/waitlist?page=2&status=pending");
+  });
+  it("fetches the CSV raw, with the bearer token", async () => {
+    const f = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("email\n", { status: 200, headers: { "content-type": "text/csv" } }));
+    const res = await adminApi.waitlistCsv("t");
+    expect(f.mock.calls[0][0]).toBe("http://backend.test/admin/waitlist.csv");
+    expect(new Headers(f.mock.calls[0][1]!.headers).get("authorization")).toBe("Bearer t");
+    expect(await res.text()).toBe("email\n");
+  });
+  it("maps CSV failures: 404 to NoAccessError, others to ApiError", async () => {
+    vi.spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(json(404, { error: "No encontrado" }))
+      .mockResolvedValueOnce(json(500, { error: "Roto" }));
+    await expect(adminApi.waitlistCsv("t")).rejects.toBeInstanceOf(NoAccessError);
+    await expect(adminApi.waitlistCsv("t")).rejects.toMatchObject({ status: 500, message: "Roto" });
   });
 });

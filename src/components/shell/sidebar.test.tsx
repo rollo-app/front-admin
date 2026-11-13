@@ -24,13 +24,18 @@ function renderSidebar(currentPath: string, email = "su@rollo.test") {
 }
 
 describe("Sidebar", () => {
+  it("links to the waitlist", () => {
+    renderSidebar("/waitlist");
+    expect(screen.getByRole("link", { name: "Lista de espera" })).toHaveAttribute("href", "/waitlist");
+    expect(screen.getByRole("link", { name: "Lista de espera" })).toHaveAttribute("aria-current", "page");
+  });
   it("marks the current section, disables the coming-soon ones and shows the email", () => {
     renderSidebar("/users");
     expect(screen.getByRole("link", { name: "Usuarios" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("link", { name: "Dashboard" })).not.toHaveAttribute("aria-current");
-    expect(screen.getByText("Rollos").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
-    expect(screen.queryByRole("link", { name: /Rollos/ })).not.toBeInTheDocument();
-    expect(screen.getAllByText("pronto")).toHaveLength(3);
+    expect(screen.getByRole("link", { name: "Rollos" })).toHaveAttribute("href", "/rollos");
+    expect(screen.getByText("Fotos").closest("[aria-disabled]")).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getAllByText("pronto")).toHaveLength(2);
     expect(screen.getByText("su@rollo.test")).toHaveAttribute("title", "su@rollo.test");
     expect(screen.getByText("S")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Salir" })).toBeInTheDocument();
@@ -42,6 +47,13 @@ describe("Sidebar", () => {
 });
 
 describe("nav helpers", () => {
+  it("keeps Rollos active on its detail pages and titles them", () => {
+    renderSidebar("/rollos/abc");
+    expect(screen.getByRole("link", { name: "Rollos" })).toHaveAttribute("aria-current", "page");
+    expect(titleFor("/rollos")).toBe("Rollos");
+    expect(titleFor("/waitlist")).toBe("Lista de espera");
+    expect(titleFor("/rollos/abc")).toBe("Rollo");
+  });
   it("matches path boundaries", () => {
     expect(isActive("/users", "/users")).toBe(true);
     expect(isActive("/users", "/users/1")).toBe(true);

@@ -25,11 +25,53 @@ export type AdminUser = {
   mediaCount: number;
 };
 
+export type Stage = "upcoming" | "active" | "ended" | "revealed";
+
+export type AdminTrip = {
+  id: string;
+  name: string;
+  joinCode: string;
+  createdAt: number;
+  startsAt: number;
+  endsAt: number;
+  revealAt: number;
+  revealed: boolean;
+  stage: Stage;
+  creator: { id: string; name: string | null; username: string | null } | null;
+  activeMembers: number;
+  maxMembers: number;
+  mediaCount: number;
+  keepOriginals: boolean;
+  /** reveal + 30 days when originals are not kept; null otherwise. */
+  originalsExpireAt: number | null;
+  originalsPurgedAt: number | null;
+};
+
+export type AdminTripMember = {
+  id: string;
+  userId: string;
+  name: string | null;
+  username: string | null;
+  role: "admin" | "member";
+  isCreator: boolean;
+  joinedAt: number;
+};
+
+export type AdminTripGroup = { id: string; name: string; memberCount: number; mediaCount: number };
+
+export type AdminTripDetail = AdminTrip & {
+  type: "trip" | "event";
+  members: AdminTripMember[];
+  /** Always empty for regular trips. */
+  groups: AdminTripGroup[];
+};
+
 export type Badge = "founder" | "first_edition";
 
 export type AdminUserDetail = AdminUser & {
   bio: string | null;
   unlimitedRollos: boolean;
+  canCreateEvents: boolean;
   trips: { id: string; name: string; role: "admin" | "member"; state: TripState }[];
 };
 
@@ -54,3 +96,18 @@ export type DegradedMode = {
   updatedAt: number | null;
   updatedBy: { id: string; email: string } | null;
 };
+
+export type Registrations = { open: boolean; updatedAt: number | null; updatedBy: { id: string; email: string } | null };
+
+export type WaitlistStatus = "confirmed" | "pending" | "unsubscribed";
+
+export type WaitlistEntry = {
+  email: string;
+  source: "app" | "web";
+  status: WaitlistStatus;
+  createdAt: number;
+  confirmedAt: number | null;
+  unsubscribedAt: number | null;
+};
+
+export type WaitlistPage = Page<WaitlistEntry> & { totals: { all: number } & Record<WaitlistStatus, number> };

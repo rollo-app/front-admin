@@ -59,7 +59,9 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                 <TableBody>
                   {user.trips.map((t) => (
                     <TableRow key={t.id}>
-                      <TableCell>{t.name}</TableCell>
+                      <TableCell>
+                        <Link href={`/rollos/${encodeURIComponent(t.id)}`} className="font-medium hover:underline">{t.name}</Link>
+                      </TableCell>
                       <TableCell>{t.role === "admin" ? "Admin" : "Miembro"}</TableCell>
                       <TableCell>{STATE_LABEL[t.state]}</TableCell>
                     </TableRow>

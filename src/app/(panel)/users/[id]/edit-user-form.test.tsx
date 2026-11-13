@@ -9,7 +9,7 @@ import type { AdminUserDetail } from "@/lib/types";
 
 const user: AdminUserDetail = {
   id: "u1", email: "a@rollo.test", name: "Ana", username: "ana", appRole: "user", badge: null,
-  createdAt: 1, lastSeenAt: null, tripCount: 0, mediaCount: 0, trips: [], bio: "Hola", unlimitedRollos: false,
+  createdAt: 1, lastSeenAt: null, tripCount: 0, mediaCount: 0, trips: [], bio: "Hola", unlimitedRollos: false, canCreateEvents: false,
 };
 
 beforeEach(() => vi.clearAllMocks());
@@ -22,6 +22,8 @@ describe("EditUserForm", () => {
     expect(screen.getByLabelText("Descripción")).toHaveValue("Hola");
     expect(screen.getByLabelText("Badge")).toHaveValue("");
     expect(screen.getByLabelText("Rollos ilimitados")).not.toBeChecked();
+    expect(screen.getByLabelText("Puede crear eventos")).not.toBeChecked();
+    expect(screen.getByText("Eventos (casamientos, fiestas): uno sin revelar a la vez.")).toBeInTheDocument();
     expect(screen.getByText("4/150")).toBeInTheDocument();
     const save = screen.getByRole("button", { name: "Guardar" });
     expect(save).toBeDisabled();
@@ -41,6 +43,29 @@ describe("EditUserForm", () => {
     await u.click(screen.getByRole("button", { name: "Guardar" }));
     expect(updateUser).toHaveBeenCalledWith("u1", { name: "Bea", badge: "founder", unlimitedRollos: true });
     expect(await screen.findByRole("status")).toHaveTextContent("Guardado");
+  });
+
+  it("renders the events checkbox checked when the user can create events", () => {
+    render(<EditUserForm user={{ ...user, canCreateEvents: true }} />);
+    expect(screen.getByLabelText("Puede crear eventos")).toBeChecked();
+  });
+
+  it("sends only canCreateEvents when it is toggled", async () => {
+    const u = userEvent.setup();
+    vi.mocked(updateUser).mockResolvedValue({ ok: true, user: { ...user, canCreateEvents: true } });
+    render(<EditUserForm user={user} />);
+    await u.click(screen.getByLabelText("Puede crear eventos"));
+    await u.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(updateUser).toHaveBeenCalledWith("u1", { canCreateEvents: true });
+  });
+
+  it("does not send canCreateEvents when it is unchanged", async () => {
+    const u = userEvent.setup();
+    vi.mocked(updateUser).mockResolvedValue({ ok: true, user });
+    render(<EditUserForm user={{ ...user, canCreateEvents: true }} />);
+    await u.type(screen.getByLabelText("Nombre"), "x");
+    await u.click(screen.getByRole("button", { name: "Guardar" }));
+    expect(updateUser).toHaveBeenCalledWith("u1", { name: "Anax" });
   });
 
   it("shows the backend error with role=alert", async () => {

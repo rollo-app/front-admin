@@ -1,5 +1,5 @@
 import "server-only";
-import type { AdminMe, AdminUser, AdminUserDetail, Badge, DegradedMode, MetricsResponse, Page, UsageResponse } from "./types";
+import type { AdminMe, AdminTrip, AdminTripDetail, AdminUser, AdminUserDetail, Badge, DegradedMode, MetricsResponse, Page, Registrations, UsageResponse, WaitlistPage } from "./types";
 
 export class ApiError extends Error {
   constructor(readonly status: number, message: string) {
@@ -41,12 +41,29 @@ export async function backendFetch<T>(
   return data as T;
 }
 
+/** Like backendFetch but hands back the raw Response (for downloads); failures map to the same errors. */
+export async function backendFetchRaw(path: string, init: { token?: string | null } = {}): Promise<Response> {
+  const base = (process.env.BACKEND_URL ?? "").replace(/\/+$/, "");
+  if (!base) throw new Error("BACKEND_URL no está configurada");
+  const headers = new Headers();
+  if (init.token) headers.set("authorization", `Bearer ${init.token}`);
+  const res = await fetch(`${base}${path}`, { method: "GET", headers, cache: "no-store" });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    const message = (data as { error?: string } | null)?.error ?? "Error";
+    if (res.status === 404 && path.startsWith("/admin")) throw new NoAccessError(message);
+    throw new ApiError(res.status, message);
+  }
+  return res;
+}
+
 export type UserPatch = Partial<{
   name: string;
   username: string;
   bio: string;
   badge: Badge | null;
   unlimitedRollos: boolean;
+  canCreateEvents: boolean;
 }>;
 
 export const adminApi = {
@@ -56,12 +73,25 @@ export const adminApi = {
   degraded: (token: string | null) => backendFetch<DegradedMode>("/admin/degraded-mode", { token }),
   setDegraded: (token: string | null, on: boolean) =>
     backendFetch<DegradedMode>("/admin/degraded-mode", { method: "PUT", body: { on }, token }),
+  registrations: (token: string | null) => backendFetch<Registrations>("/admin/registrations", { token }),
+  setRegistrations: (token: string | null, open: boolean) =>
+    backendFetch<Registrations>("/admin/registrations", { method: "PUT", body: { open }, token }),
+  waitlist: (token: string | null, query: URLSearchParams) =>
+    backendFetch<WaitlistPage>(`/admin/waitlist?${query}`, { token }),
+  waitlistCsv: (token: string | null) => backendFetchRaw("/admin/waitlist.csv", { token }),
   users: (token: string | null, query: URLSearchParams) =>
     backendFetch<Page<AdminUser>>(`/admin/users?${query}`, { token }),
   user: (token: string | null, id: string) =>
     backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { token }),
   editUser: (token: string | null, id: string, patch: UserPatch) =>
     backendFetch<AdminUserDetail>(`/admin/users/${encodeURIComponent(id)}`, { method: "PATCH", body: patch, token }),
+  trips: (token: string | null, query: URLSearchParams) =>
+    backendFetch<Page<AdminTrip>>(`/admin/trips?${query}`, { token }),
+  trip: (token: string | null, id: string) =>
+    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { token }),
+  updateTrip: (token: string | null, id: string, patch: { maxMembers?: number; keepOriginals?: boolean }) =>
+    backendFetch<AdminTripDetail>(`/admin/trips/${encodeURIComponent(id)}`, { method: "PATCH", body: patch, token }),
+  setTripCap: (token: string | null, id: string, maxMembers: number) => adminApi.updateTrip(token, id, { maxMembers }),
 };
 
 export const authApi = {
