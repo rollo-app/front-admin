@@ -57,7 +57,14 @@ export type AdminTripMember = {
   joinedAt: number;
 };
 
-export type AdminTripDetail = AdminTrip & { members: AdminTripMember[] };
+export type AdminTripGroup = { id: string; name: string; memberCount: number; mediaCount: number };
+
+export type AdminTripDetail = AdminTrip & {
+  type: "trip" | "event";
+  members: AdminTripMember[];
+  /** Always empty for regular trips. */
+  groups: AdminTripGroup[];
+};
 
 export type Badge = "founder" | "first_edition";
 
