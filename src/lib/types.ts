@@ -71,6 +71,7 @@ export type Badge = "founder" | "first_edition";
 export type AdminUserDetail = AdminUser & {
   bio: string | null;
   unlimitedRollos: boolean;
+  canCreateEvents: boolean;
   trips: { id: string; name: string; role: "admin" | "member"; state: TripState }[];
 };
 

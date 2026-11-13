@@ -63,6 +63,7 @@ export type UserPatch = Partial<{
   bio: string;
   badge: Badge | null;
   unlimitedRollos: boolean;
+  canCreateEvents: boolean;
 }>;
 
 export const adminApi = {
