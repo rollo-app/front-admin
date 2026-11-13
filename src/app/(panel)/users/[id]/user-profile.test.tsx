@@ -9,7 +9,7 @@ import type { AdminUserDetail } from "@/lib/types";
 
 const user: AdminUserDetail = {
   id: "u1", email: "a@rollo.test", name: "Ana", username: "ana", appRole: "user", badge: null,
-  createdAt: 1, lastSeenAt: null, tripCount: 0, mediaCount: 0, trips: [], bio: null, unlimitedRollos: false,
+  createdAt: 1, lastSeenAt: null, tripCount: 0, mediaCount: 0, trips: [], bio: null, unlimitedRollos: false, canCreateEvents: false,
 };
 const ui = <UserProfile user={user} lastSeen="nunca" createdAt="1 ene 2026" />;
 
@@ -38,5 +38,13 @@ describe("UserProfile", () => {
     expect(screen.getByText("sí")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Guardado");
     expect(screen.getByRole("button", { name: "Editar" })).toHaveFocus();
+  });
+
+  it("shows whether the user can create events", () => {
+    const { unmount } = render(ui);
+    expect(screen.getByText("Puede crear eventos").nextElementSibling).toHaveTextContent("no");
+    unmount();
+    render(<UserProfile user={{ ...user, canCreateEvents: true }} lastSeen="nunca" createdAt="1 ene 2026" />);
+    expect(screen.getByText("Puede crear eventos").nextElementSibling).toHaveTextContent("sí");
   });
 });

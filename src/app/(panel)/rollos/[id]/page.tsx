@@ -36,6 +36,7 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
     );
   }
   const fields: [string, React.ReactNode][] = [
+    ["Tipo", trip.type === "event" ? "Evento" : "Rollo"],
     ["Código", <span key="c" className="font-mono">{trip.joinCode}</span>],
     [
       "Creador",
@@ -89,6 +90,31 @@ export default async function TripDetailPage({ params }: { params: Promise<{ id:
           />
         </CardContent>
       </Card>
+      {trip.type === "event" ? (
+        <Card>
+          <CardHeader><CardTitle>Grupos</CardTitle></CardHeader>
+          <CardContent>
+            {trip.groups.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Todavía no hay grupos.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow><TableHead>Nombre</TableHead><TableHead>Personas</TableHead><TableHead>Fotos</TableHead></TableRow>
+                </TableHeader>
+                <TableBody>
+                  {trip.groups.map((g) => (
+                    <TableRow key={g.id}>
+                      <TableCell className="font-medium">{g.name}</TableCell>
+                      <TableCell>{formatInt(g.memberCount)}</TableCell>
+                      <TableCell>{formatInt(g.mediaCount)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader><CardTitle>Participantes</CardTitle></CardHeader>
         <CardContent>

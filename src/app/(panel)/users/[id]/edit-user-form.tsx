@@ -30,6 +30,7 @@ export function EditUserForm({
   const [bio, setBio] = useState(user.bio ?? "");
   const [badge, setBadge] = useState<Badge | "">(user.badge ?? "");
   const [unlimited, setUnlimited] = useState(user.unlimitedRollos);
+  const [canCreateEvents, setCanCreateEvents] = useState(user.canCreateEvents);
   const [error, setError] = useState<string>();
   const [usernameError, setUsernameError] = useState<string>();
   const [savedAt, setSavedAt] = useState(0);
@@ -41,6 +42,7 @@ export function EditUserForm({
     ...(bio.trim() !== (user.bio ?? "") ? { bio: bio.trim() } : {}),
     ...(badge !== (user.badge ?? "") ? { badge: badge === "" ? null : badge } : {}),
     ...(unlimited !== user.unlimitedRollos ? { unlimitedRollos: unlimited } : {}),
+    ...(canCreateEvents !== user.canCreateEvents ? { canCreateEvents } : {}),
   };
   const changed = Object.keys(patch).length > 0;
 
@@ -129,6 +131,23 @@ export function EditUserForm({
           <Label htmlFor="edit-unlimited">Rollos ilimitados</Label>
           <p id="edit-unlimited-hint" className="text-xs text-muted-foreground">
             Sin tope de rollos sin revelar ni por mes
+          </p>
+        </div>
+      </div>
+      <div className="flex items-start gap-3">
+        <input
+          id="edit-can-create-events"
+          type="checkbox"
+          role="switch"
+          checked={canCreateEvents}
+          aria-describedby="edit-can-create-events-hint"
+          onChange={(e) => setCanCreateEvents(e.target.checked)}
+          className="mt-0.5 size-4 accent-primary"
+        />
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="edit-can-create-events">Puede crear eventos</Label>
+          <p id="edit-can-create-events-hint" className="text-xs text-muted-foreground">
+            Eventos (casamientos, fiestas): uno sin revelar a la vez.
           </p>
         </div>
       </div>
