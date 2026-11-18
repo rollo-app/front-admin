@@ -24,6 +24,10 @@ function renderSidebar(currentPath: string, email = "su@rollo.test") {
 }
 
 describe("Sidebar", () => {
+  it("shows the Rollo Project brand", () => {
+    renderSidebar("/users");
+    expect(screen.getByText("Rollo Project")).toBeInTheDocument();
+  });
   it("links to the waitlist", () => {
     renderSidebar("/waitlist");
     expect(screen.getByRole("link", { name: "Lista de espera" })).toHaveAttribute("href", "/waitlist");
