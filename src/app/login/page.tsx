@@ -6,7 +6,7 @@ export default function LoginPage() {
     <main className="flex flex-1 items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Rollo · Panel</CardTitle>
+          <CardTitle>Rollo Project · Panel</CardTitle>
         </CardHeader>
         <CardContent>
           <LoginForm />

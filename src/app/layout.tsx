@@ -8,7 +8,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rollo Admin",
+  title: "Rollo Project · Panel",
   description: "Panel de administración de Rollo",
 };
 
